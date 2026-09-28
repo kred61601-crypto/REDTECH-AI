@@ -20,6 +20,14 @@ After saving the variables, redeploy the panel service. The `/admin` server regi
 
 The webhook hub URL is not the MongoDB URL. Each actual bot deployment still uses `FIREBOX_HUB_URL`, `FIREBOX_BOT_ID`, `FIREBOX_BOT_KEY`, and `FIREBOX_PUBLIC_URL` for event delivery and pairing.
 
+## Paystack M-PESA access plans
+
+Add `PAYSTACK_SECRET_KEY` to the panel service using a Paystack **test** secret key first, then set `PAYSTACK_ENABLED=true`. The secret key stays server-side and is also used to verify Paystack's `x-paystack-signature` webhook header. Do not put it in the browser or commit it to the repository.
+
+In the Paystack Dashboard, configure the webhook URL as `https://<your-public-panel-domain>/api/paystack/webhook` and enable the `charge.success` event. Paystack uses this webhook to confirm the asynchronous M-PESA authorization; the application also verifies the transaction with Paystack before issuing a token. Test the complete flow with Paystack test credentials before changing to a live secret key. Set `PAYSTACK_ENABLED=false` to turn the purchase flow off without removing the secret.
+
+The existing plans remain KSh 29 / 7 days, KSh 49 / 14 days, and KSh 99 / 30 days. A valid payment creates or extends the corresponding phone's expiring token. Unpaid token creation is disabled; pre-existing non-expiring tokens remain usable and do not need a paid plan.
+
 ## Administrator access
 
 Add this variable to the Firebox Bot panel service in Railway:

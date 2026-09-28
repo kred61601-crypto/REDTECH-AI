@@ -67,7 +67,11 @@ const PORT = process.env.PORT || 3000;
 
 if (process.env.NODE_ENV === "production") app.set("trust proxy", 1);
 
-app.use(express.json());
+app.use(express.json({
+    verify(req, _res, buffer) {
+        if (req.originalUrl.split("?")[0] === "/api/paystack/webhook") req.rawBody = Buffer.from(buffer);
+    },
+}));
 app.use(express.urlencoded({ extended: true }));
 
 app.use(session({
@@ -85,7 +89,24 @@ app.use(session({
 // ── Static files ──────────────────────────────────────────────────────────────
 // Disable Express's automatic index.html fallback so `/` always opens the
 // public visitor-specific Server 1 bot workspace.
+app.get("/servers.html", (_req, res) => res.redirect("/token"));
 app.use(express.static(path.join(__dirname, "public"), { index: false }));
+
+// Paystack webhooks are authenticated against the exact raw request bytes.
+const paystackWebhookService = require("./saas/paystackPayments").createPaystackService({
+    tokenRegistry: require("./saas/tokenRegistry"),
+});
+app.post("/api/paystack/webhook", async (req, res) => {
+    try {
+        await paystackWebhookService.handleWebhook({
+            rawBody: req.rawBody,
+            signature: req.get("x-paystack-signature"),
+        });
+        return res.sendStatus(200);
+    } catch (error) {
+        return res.status(error.status || 500).json({ error: error.message || "Paystack webhook processing failed." });
+    }
+});
 
 // ── Bot API (/api/bot/*) ──────────────────────────────────────────────────────
 app.use("/api/auth", require("./saas/authApiRoutes"));

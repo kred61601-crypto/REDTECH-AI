@@ -11,9 +11,11 @@ const { isPanelProxy, matchesSecret } = require("./panelProxyAuth");
 const { requireAdmin } = require("./adminAuth");
 const usageRegistry = require("./usageRegistry");
 const tokenRegistry = require("./tokenRegistry");
+const { PLANS, createPaystackService } = require("./paystackPayments");
 
 const router = express.Router();
 router.use(express.json());
+const paystackPayments = createPaystackService({ tokenRegistry });
 router.post("/hub-sync", async (req, res) => {
     if (!matchesSecret(req.get("X-Firebox-Sync-Key"), process.env.FIREBOX_PANEL_SYNC_SECRET)) return res.status(401).json({ error: "Invalid panel sync key." });
     try {
@@ -23,17 +25,33 @@ router.post("/hub-sync", async (req, res) => {
 });
 // Public payment configuration is safe to expose; credentials remain server-only.
 router.get("/payment-config", (_req, res) => res.json({
-    enabled: String(process.env.MPESA_ENABLED || "false").toLowerCase() === "true",
+    enabled: String(process.env.PAYSTACK_ENABLED || "false").toLowerCase() === "true" && !!process.env.PAYSTACK_SECRET_KEY,
+    provider: "Paystack M-PESA",
     currency: "KSh",
-    plans: [{ days: 7, amount: 29 }, { days: 14, amount: 49 }, { days: 30, amount: 99 }]
+    plans: Object.values(PLANS),
 }));
+
+router.post("/paystack/charge", async (req, res) => {
+    try {
+        const charge = await paystackPayments.initializeCharge(req.body || {});
+        return res.status(202).json(charge);
+    } catch (error) {
+        return res.status(error.status || 500).json({ error: error.message || "Could not start Paystack payment." });
+    }
+});
+
+router.post("/paystack/verify", async (req, res) => {
+    try {
+        const result = await paystackPayments.verifyAndGrant(req.body && req.body.reference);
+        return res.json(result);
+    } catch (error) {
+        return res.status(error.status || 500).json({ error: error.message || "Could not verify Paystack payment." });
+    }
+});
 
 // Public Firebox pairing endpoints intentionally do not require an account.
 router.post("/token", async (req, res) => {
-    try {
-        const token = await tokenRegistry.create(req.body?.phone);
-        res.status(201).json({ ok: true, token });
-    } catch (error) { res.status(400).json({ error: error.message }); }
+    return res.status(402).json({ error: "A verified Paystack access plan is required to issue a Firebox token." });
 });
 
 router.post("/token/pair-code", async (req, res) => {

@@ -12,10 +12,12 @@ const tokenSchema = new mongoose.Schema({
     tokenHash: { type: String, required: true, unique: true, index: true },
     tokenCiphertext: { type: mongoose.Schema.Types.Mixed, required: true },
     phone: { type: mongoose.Schema.Types.Mixed, required: true },
+    phoneHash: { type: String, unique: true, sparse: true },
     status: { type: String, default: "active", index: true },
     createdAt: { type: Date, default: Date.now },
     lastUsedAt: Date,
     expiresAt: Date,
+    paidPaymentRefs: { type: [String], default: [] },
     pairingAttempts: { type: Number, default: 0 },
 }, { collection: "firebox_tokens" });
 let FireboxToken;
@@ -31,6 +33,7 @@ function writeRecords(records) {
     fs.renameSync(temp, storePath);
 }
 function hashToken(token) { return crypto.createHash("sha256").update(token).digest("hex"); }
+function phoneDigest(phone) { return crypto.createHmac("sha256", encryptionKey).update(phone).digest("hex"); }
 function encryptText(value) {
     const iv = crypto.randomBytes(12);
     const cipher = crypto.createCipheriv("aes-256-gcm", encryptionKey, iv);
@@ -69,8 +72,17 @@ function plain(record) {
         pairingAttempts: Number(item.pairingAttempts || 0),
     };
 }
+function samePhone(record, normalized) {
+    try { return decryptPhone(record) === normalized; } catch (_) { return false; }
+}
+function expiryDate(value) {
+    if (!value) return null;
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? null : date;
+}
 
 module.exports = {
+    normalizePhone,
     async create(phone) {
         const normalized = normalizePhone(phone);
         const token = makeToken();
@@ -78,27 +90,124 @@ module.exports = {
             tokenHash: hashToken(token),
             tokenCiphertext: encryptText(token),
             phone: encryptText(normalized),
+            phoneHash: phoneDigest(normalized),
             status: "active",
             createdAt: new Date(),
             lastUsedAt: null,
             expiresAt: null,
+            paidPaymentRefs: [],
             pairingAttempts: 0,
         };
         if (await useMongo()) {
             const existing = await FireboxToken.find({ status: "active" }).lean();
-            if (existing.some(item => { try { return decryptPhone(item) === normalized; } catch (_) { return false; } })) {
+            if (existing.some(item => samePhone(item, normalized))) {
                 throw new Error("This phone number already has a Firebox token. Use the existing token instead.");
             }
             await FireboxToken.create(record);
         } else {
             const records = readRecords();
-            if (records.some(item => { try { return decryptPhone(item) === normalized; } catch (_) { return false; } })) {
+            if (records.some(item => samePhone(item, normalized))) {
                 throw new Error("This phone number already has a Firebox token. Use the existing token instead.");
             }
             record.createdAt = record.createdAt.toISOString();
             writeRecords([...records, record]);
         }
         return token;
+    },
+    async canPurchase(phone) {
+        const normalized = normalizePhone(phone);
+        const records = await useMongo() ? await FireboxToken.find({}).lean() : readRecords();
+        const existing = records.find(item => samePhone(item, normalized));
+        if (!existing) return { allowed: true };
+        if (existing.status !== "active") return { allowed: true };
+        if (!existing.expiresAt) {
+            return {
+                allowed: false,
+                message: "This number already has a non-expiring Firebox token. Use that token instead of purchasing another plan.",
+            };
+        }
+        return { allowed: true };
+    },
+    async applyPaidPlan({ phone, days, reference }) {
+        const normalized = normalizePhone(phone);
+        const duration = Number(days);
+        if (![7, 14, 30].includes(duration)) throw new Error("Invalid Firebox access plan.");
+        if (!/^fb-[a-f0-9]{32}$/.test(String(reference || ""))) throw new Error("Invalid payment reference.");
+
+        const mongo = await useMongo();
+        const records = mongo ? await FireboxToken.find({}).lean() : readRecords();
+        const existing = records.find(item => samePhone(item, normalized));
+        if (existing) {
+            if ((existing.paidPaymentRefs || []).includes(reference)) return plain(existing);
+            if (existing.status === "active" && !existing.expiresAt) {
+                throw new Error("This number already has a non-expiring Firebox token.");
+            }
+            const priorExpiry = expiryDate(existing.expiresAt);
+            const base = priorExpiry && priorExpiry.getTime() > Date.now() ? priorExpiry.getTime() : Date.now();
+            const expiresAt = new Date(base + duration * 24 * 60 * 60 * 1000);
+
+            if (mongo) {
+                const updated = await FireboxToken.findOneAndUpdate(
+                    { tokenHash: existing.tokenHash, paidPaymentRefs: { $ne: reference } },
+                    {
+                        $set: { status: "active", phoneHash: phoneDigest(normalized), expiresAt },
+                        $addToSet: { paidPaymentRefs: reference },
+                    },
+                    { new: true },
+                ).lean();
+                if (updated) return plain(updated);
+                const afterRace = await FireboxToken.findOne({ tokenHash: existing.tokenHash }).lean();
+                if (afterRace && (afterRace.paidPaymentRefs || []).includes(reference)) return plain(afterRace);
+                throw new Error("Could not safely apply the Firebox access plan. Please retry verification.");
+            }
+
+            existing.status = "active";
+            existing.phoneHash = phoneDigest(normalized);
+            existing.expiresAt = expiresAt.toISOString();
+            existing.paidPaymentRefs = [...new Set([...(existing.paidPaymentRefs || []), reference])];
+            writeRecords(records);
+            return plain(existing);
+        }
+
+        const token = makeToken();
+        const now = new Date();
+        const record = {
+            tokenHash: hashToken(token),
+            tokenCiphertext: encryptText(token),
+            phone: encryptText(normalized),
+            phoneHash: phoneDigest(normalized),
+            status: "active",
+            createdAt: now,
+            lastUsedAt: null,
+            expiresAt: new Date(now.getTime() + duration * 24 * 60 * 60 * 1000),
+            paidPaymentRefs: [reference],
+            pairingAttempts: 0,
+        };
+        if (mongo) {
+            try {
+                await FireboxToken.create(record);
+            } catch (error) {
+                if (error.code === 11000) {
+                    const raced = await FireboxToken.findOne({ phoneHash: phoneDigest(normalized) }).lean();
+                    if (raced) return module.exports.applyPaidPlan({ phone: normalized, days: duration, reference });
+                }
+                throw error;
+            }
+            return plain(record);
+        }
+        record.createdAt = record.createdAt.toISOString();
+        record.expiresAt = record.expiresAt.toISOString();
+        writeRecords([...records, record]);
+        return plain(record);
+    },
+    async getPaidTokenByReference(reference) {
+        const ref = String(reference || "");
+        if (!/^fb-[a-f0-9]{32}$/.test(ref)) return null;
+        const mongo = await useMongo();
+        const record = mongo
+            ? await FireboxToken.findOne({ paidPaymentRefs: ref }).lean()
+            : readRecords().find(item => (item.paidPaymentRefs || []).includes(ref));
+        return record ? plain(record) : null;
     },
     async resolve(token) {
         const normalized = String(token || "").trim().toUpperCase();
@@ -130,9 +239,11 @@ module.exports = {
         return readRecords().map(plain);
     },
     async listActiveBotIds() {
+        const isValid = item => item.status === "active" && (!item.expiresAt || Date.parse(item.expiresAt) >= Date.now());
         if (await useMongo()) {
-            return (await FireboxToken.find({ status: "active" }).select({ tokenHash: 1 }).lean()).map(item => item.tokenHash);
+            return (await FireboxToken.find({ status: "active" }).select({ tokenHash: 1, expiresAt: 1 }).lean())
+                .filter(isValid).map(item => item.tokenHash);
         }
-        return readRecords().filter(item => item.status === "active").map(item => item.tokenHash);
+        return readRecords().filter(isValid).map(item => item.tokenHash);
     },
 };

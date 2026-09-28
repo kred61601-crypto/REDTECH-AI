@@ -29,31 +29,32 @@ test("the public entry point separates reusable token and pairing-code pages", (
     assert.match(indexSource, /app\.get\("\/auth", \(_req, res\) => res\.redirect\("\/"\)\)/);
     assert.match(indexSource, /app\.get\("\/settings", \(_req, res\) => res\.redirect\("\/token"\)\)/);
     assert.match(indexSource, /app\.get\("\/login", \(_req, res\) => res\.redirect\("\/token"\)\)/);
+    assert.match(indexSource, /app\.get\("\/servers\.html", \(_req, res\) => res\.redirect\("\/token"\)\)/);
     const tokenSource = fs.readFileSync(path.join(__dirname, "../public/token.html"), "utf8");
     const codeSource = fs.readFileSync(path.join(__dirname, "../public/code.html"), "utf8");
     assert.match(tokenSource, /FIREBOX/);
-    assert.match(tokenSource, /\/api\/bot\/token/);
-    assert.match(tokenSource, /VALIDATING NUMBER/);
-    assert.match(tokenSource, /ENCRYPTING REGISTRATION/);
-    assert.match(tokenSource, /SECURING FIREBOX IDENTITY/);
-    assert.match(tokenSource, /SYNCING PAIRING SERVICE/);
-    assert.match(tokenSource, /GENERATING YOUR TOKEN/);
-    assert.match(tokenSource, /async function typewrite/);
+    assert.match(tokenSource, /\/api\/bot\/paystack\/charge/);
+    assert.match(tokenSource, /\/api\/bot\/paystack\/verify/);
+    assert.match(tokenSource, /PAYSTACK M-PESA READY/);
+    assert.match(tokenSource, /CHECK PAYMENT STATUS/);
     assert.match(tokenSource, /id="rotating-copy"/);
-    assert.match(tokenSource, /Generate once\. Store it safely\./);
-    assert.match(tokenSource, /Your Firebox token stays yours\./);
+    assert.match(tokenSource, /M-PESA PHONE/);
+    assert.match(tokenSource, /PAYSTACK RECEIPT/);
+    assert.match(tokenSource, /issued only after payment verification/);
     assert.match(tokenSource, /window\.matchMedia\("\(prefers-reduced-motion: reduce\)"\)/);
     assert.doesNotMatch(tokenSource, /textContent=copyLines\[0\];return/);
     assert.match(codeSource, /FIREBOX/);
     assert.match(codeSource, /\/api\/bot\/token\/pair-code/);
     assert.match(codeSource, /FORGOT TOKEN\? CHAT ADMIN/);
     assert.match(codeSource, /wa\.me\/254769564723/);
-    for (const source of [tokenSource, codeSource]) {
+    for (const source of [tokenSource]) {
         assert.match(source, /KSh 29/);
         assert.match(source, /KSh 49/);
         assert.match(source, /KSh 99/);
         assert.match(source, /\/api\/bot\/payment-config/);
     }
+    assert.match(codeSource, /CHOOSE A PAYSTACK M-PESA PLAN/);
+    assert.doesNotMatch(codeSource, /STK PUSH OFFLINE/);
     assert.doesNotMatch(tokenSource, /Continue to pairing|Create account|Sign in/);
     assert.doesNotMatch(codeSource, /Continue to pairing|Create account|Sign in/);
     assert.doesNotMatch(workspaceSource, /dashboard\/auth\/me/);
@@ -135,8 +136,9 @@ test("the bot API remains session-scoped for each visitor", () => {
     assert.match(routes, /return req\.session\.id/);
     assert.match(routes, /botManager\.instances\.get\(userId\(req\)\)/);
     assert.match(routes, /router\.get\("\/payment-config"/);
-    assert.match(routes, /MPESA_ENABLED/);
+    assert.match(routes, /PAYSTACK_ENABLED/);
     assert.match(routes, /router\.post\("\/token"/);
+    assert.match(routes, /status\(402\)\.json\(\{ error: "A verified Paystack access plan is required/);
     assert.match(routes, /router\.post\("\/token\/pair-code"/);
 });
 

@@ -26,4 +26,25 @@ test("token registry creates opaque tokens and resolves the protected phone inte
     );
 });
 
+test("verified paid plans issue expiring tokens and repeated references do not double-extend", async () => {
+    const phone = "254700000001";
+    const firstReference = `fb-${"1".repeat(32)}`;
+    const before = Date.now();
+    const first = await registry.applyPaidPlan({ phone, days: 7, reference: firstReference });
+    assert.match(first.token, /^FIREBOX-[A-Z0-9]{4}-[A-Z0-9]{4}$/);
+    assert.ok(Date.parse(first.expiresAt) >= before + 7 * 24 * 60 * 60 * 1000 - 1000);
+    assert.ok(Date.parse(first.expiresAt) <= Date.now() + 7 * 24 * 60 * 60 * 1000 + 1000);
+
+    const replay = await registry.applyPaidPlan({ phone, days: 7, reference: firstReference });
+    assert.equal(replay.token, first.token);
+    assert.equal(new Date(replay.expiresAt).getTime(), new Date(first.expiresAt).getTime());
+
+    const secondReference = `fb-${"2".repeat(32)}`;
+    const extended = await registry.applyPaidPlan({ phone, days: 14, reference: secondReference });
+    assert.equal(extended.token, first.token);
+    assert.ok(Date.parse(extended.expiresAt) >= Date.parse(first.expiresAt) + 14 * 24 * 60 * 60 * 1000 - 1000);
+    assert.deepEqual(await registry.canPurchase(phone), { allowed: true });
+    assert.equal((await registry.getPaidTokenByReference(secondReference)).token, first.token);
+});
+
 test.after(() => { try { fs.unlinkSync(storePath); } catch {} });
