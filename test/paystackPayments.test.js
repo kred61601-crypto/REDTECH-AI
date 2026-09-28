@@ -26,7 +26,8 @@ function validTransaction(reference, overrides = {}) {
             application: "firebox-bot",
             plan_days: 7,
             plan_amount_kes: 29,
-            phone: "254712345678",
+            whatsapp_phone: "254769564723",
+            payer_phone: "254712345678",
             email: "buyer@example.com",
         },
         customer: { email: "buyer@example.com" },
@@ -64,7 +65,7 @@ test("initializes Paystack's KES M-PESA charge with a server-generated reference
         return jsonResponse({ status: true, data: { reference: sent.body.reference, status: "pay_offline", display_text: "Approve the prompt." } });
     });
 
-    const charge = await service.initializeCharge({ phone: "+254 712 345 678", email: "Buyer@example.com", days: 7 });
+    const charge = await service.initializeCharge({ phone: "+254 769 564 723", payerPhone: "+254 712 345 678", email: "Buyer@example.com", days: 7 });
     assert.equal(sent.url, "https://api.paystack.co/charge");
     assert.equal(sent.options.method, "POST");
     assert.match(sent.options.headers.Authorization, /^Bearer sk_test_/);
@@ -74,6 +75,8 @@ test("initializes Paystack's KES M-PESA charge with a server-generated reference
     assert.deepEqual(sent.body.mobile_money, { phone: "+254712345678", provider: "mpesa" });
     assert.equal(sent.body.metadata.application, "firebox-bot");
     assert.equal(sent.body.metadata.plan_days, 7);
+    assert.equal(sent.body.metadata.whatsapp_phone, "254769564723");
+    assert.equal(sent.body.metadata.payer_phone, "254712345678");
     assert.equal(charge.reference, sent.body.reference);
     assert.equal(charge.status, "pay_offline");
 });
@@ -81,8 +84,9 @@ test("initializes Paystack's KES M-PESA charge with a server-generated reference
 test("rejects unsupported plans and non-Kenyan numbers without contacting Paystack", async () => {
     let calls = 0;
     const service = makeService(async () => { calls++; return jsonResponse({ status: true, data: {} }); });
-    await assert.rejects(service.initializeCharge({ phone: "254712345678", email: "buyer@example.com", days: 21 }), /available access plans/);
-    await assert.rejects(service.initializeCharge({ phone: "0712345678", email: "buyer@example.com", days: 7 }), /Kenyan M-PESA number/);
+    await assert.rejects(service.initializeCharge({ phone: "254769564723", payerPhone: "254712345678", email: "buyer@example.com", days: 21 }), /available access plans/);
+    await assert.rejects(service.initializeCharge({ phone: "254769564723", payerPhone: "0712345678", email: "buyer@example.com", days: 7 }), /Kenyan M-PESA number/);
+    await assert.rejects(service.initializeCharge({ phone: "0712345678", payerPhone: "254712345678", email: "buyer@example.com", days: 7 }), /WhatsApp number with country code/);
     assert.equal(calls, 0);
 });
 
@@ -109,6 +113,24 @@ test("only a verified, matching successful transaction grants the selected plan"
     const result = await service.verifyAndGrant(reference);
     assert.equal(result.status, "success");
     assert.equal(result.token, "FIREBOX-ABCD-2345");
+    assert.deepEqual(registry.applied, [{ phone: "254769564723", days: 7, reference }]);
+});
+
+test("already-started payments with the old single-number metadata remain verifiable", async () => {
+    const reference = `fb-${"f".repeat(32)}`;
+    const registry = {};
+    const body = validTransaction(reference, {
+        metadata: {
+            application: "firebox-bot",
+            plan_days: 7,
+            plan_amount_kes: 29,
+            phone: "254712345678",
+            email: "buyer@example.com",
+        },
+    });
+    const service = makeService(async () => jsonResponse({ status: true, data: body }), registry);
+    const result = await service.verifyAndGrant(reference);
+    assert.equal(result.status, "success");
     assert.deepEqual(registry.applied, [{ phone: "254712345678", days: 7, reference }]);
 });
 
@@ -178,7 +200,7 @@ test("disabling new checkouts does not strand a charge awaiting final verificati
         getSecret: () => "sk_test_unit_test_key",
         isEnabled: () => false,
     });
-    await assert.rejects(service.initializeCharge({ phone: "254712345678", email: "buyer@example.com", days: 7 }), /not configured/);
+    await assert.rejects(service.initializeCharge({ phone: "254769564723", payerPhone: "254712345678", email: "buyer@example.com", days: 7 }), /not configured/);
     const verified = await service.verifyAndGrant(reference);
     assert.equal(verified.status, "success");
 });

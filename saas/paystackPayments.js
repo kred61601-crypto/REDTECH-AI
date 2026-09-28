@@ -15,6 +15,14 @@ function httpError(status, message) {
 
 function normalizePhone(value) {
     const digits = String(value || "").replace(/\D/g, "");
+    if (!/^[1-9]\d{6,14}$/.test(digits)) {
+        throw httpError(400, "Enter a WhatsApp number with country code, for example +254712345678.");
+    }
+    return digits;
+}
+
+function normalizeMpesaPhone(value) {
+    const digits = String(value || "").replace(/\D/g, "");
     if (!/^254[17]\d{8}$/.test(digits)) {
         throw httpError(400, "Enter a Kenyan M-PESA number with country code, for example +254712345678.");
     }
@@ -24,7 +32,7 @@ function normalizePhone(value) {
 function normalizeEmail(value) {
     const email = String(value || "").trim().toLowerCase();
     if (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        throw httpError(400, "Enter a valid email address for the Paystack receipt.");
+        throw httpError(400, "Enter a valid email address for the payment receipt.");
     }
     return email;
 }
@@ -59,14 +67,14 @@ function createPaystackService({
 
     function requireSecret() {
         if (!getSecret()) {
-            throw httpError(503, "Paystack payments are not configured. Please try again later.");
+            throw httpError(503, "Payments are not configured. Please try again later.");
         }
         return getSecret();
     }
 
     function requireEnabled() {
         const secret = requireSecret();
-        if (!isEnabled()) throw httpError(503, "Paystack payments are not configured. Please try again later.");
+        if (!isEnabled()) throw httpError(503, "Payments are not configured. Please try again later.");
         return secret;
     }
 
@@ -84,18 +92,19 @@ function createPaystackService({
                 signal: AbortSignal.timeout(15000),
             });
         } catch {
-            throw httpError(502, "Could not reach Paystack. Please retry shortly.");
+            throw httpError(502, "Payment service is temporarily unavailable. Please retry shortly.");
         }
         const result = await response.json().catch(() => null);
         if (!response.ok || !result || result.status !== true) {
-            throw httpError(502, "Paystack could not process the request. Please retry or contact support.");
+            throw httpError(502, "The payment request could not be processed. Please retry or contact support.");
         }
         return result.data;
     }
 
-    async function initializeCharge({ phone: phoneInput, email: emailInput, days: daysInput }) {
+    async function initializeCharge({ phone: phoneInput, payerPhone: payerPhoneInput, email: emailInput, days: daysInput }) {
         requireEnabled();
         const phone = normalizePhone(phoneInput);
+        const payerPhone = normalizeMpesaPhone(payerPhoneInput);
         const email = normalizeEmail(emailInput);
         const days = Number(daysInput);
         const plan = PLANS[days];
@@ -113,7 +122,8 @@ function createPaystackService({
             application: "firebox-bot",
             plan_days: plan.days,
             plan_amount_kes: plan.amount,
-            phone,
+            whatsapp_phone: phone,
+            payer_phone: payerPhone,
             email,
         };
         const charge = await paystackRequest("/charge", {
@@ -123,17 +133,17 @@ function createPaystackService({
                 amount: plan.amount * 100,
                 currency: "KES",
                 reference,
-                mobile_money: { phone: `+${phone}`, provider: "mpesa" },
+                mobile_money: { phone: `+${payerPhone}`, provider: "mpesa" },
                 metadata,
             },
         });
         if (!charge || charge.reference !== reference) {
-            throw httpError(502, "Paystack returned an unexpected payment reference. No token was issued.");
+            throw httpError(502, "The payment service returned an unexpected reference. No token was issued.");
         }
         return {
             reference,
             status: String(charge.status || "pending"),
-            displayText: String(charge.display_text || "Approve the M-PESA prompt on your phone, then check payment status."),
+            displayText: String(charge.display_text || `Approve the M-PESA prompt sent to +${payerPhone}, then check payment status.`),
             message: "M-PESA payment request sent.",
         };
     }
@@ -141,25 +151,29 @@ function createPaystackService({
     async function verifyAndGrant(referenceInput) {
         requireSecret();
         const reference = String(referenceInput || "").trim();
-        if (!/^fb-[a-f0-9]{32}$/.test(reference)) throw httpError(400, "Invalid Paystack payment reference.");
+        if (!/^fb-[a-f0-9]{32}$/.test(reference)) throw httpError(400, "Invalid payment reference.");
 
         const transaction = await paystackRequest(`/transaction/verify/${encodeURIComponent(reference)}`);
         if (!transaction || transaction.reference !== reference) {
-            throw httpError(400, "Paystack transaction reference did not match.");
+            throw httpError(400, "Payment reference could not be verified.");
         }
 
         const metadata = parseMetadata(transaction.metadata);
         const days = Number(metadata && metadata.plan_days);
         const plan = PLANS[days];
-        const phone = metadata && String(metadata.phone || "");
+        // Accept the old single-number metadata for any payment that was already
+        // in flight when this separate-payer checkout was deployed.
+        const phone = metadata && String(metadata.whatsapp_phone || metadata.phone || "");
+        const payerPhone = metadata && String(metadata.payer_phone || metadata.phone || "");
         const email = metadata && String(metadata.email || "").trim().toLowerCase();
         const customerEmail = String(transaction.customer && transaction.customer.email || "").trim().toLowerCase();
         if (!metadata || metadata.application !== "firebox-bot" || !plan ||
             Number(metadata.plan_amount_kes) !== plan.amount ||
-            !/^254[17]\d{8}$/.test(phone) || !email || customerEmail !== email ||
+            !/^[1-9]\d{6,14}$/.test(phone) || !/^254[17]\d{8}$/.test(payerPhone) ||
+            !email || customerEmail !== email ||
             Number(transaction.amount) !== plan.amount * 100 || transaction.currency !== "KES" ||
             transaction.channel !== "mobile_money") {
-            throw httpError(400, "Verified Paystack transaction does not match a Firebox access plan.");
+            throw httpError(400, "Verified payment does not match a Firebox access plan.");
         }
 
         if (transaction.status !== "success") {
@@ -171,7 +185,7 @@ function createPaystackService({
                 days: plan.days,
                 message: status === "pending"
                     ? "Payment is still awaiting M-PESA approval. Approve the prompt and check again shortly."
-                    : "Paystack has not confirmed a successful payment. No token was issued.",
+                    : "Payment has not been confirmed. No token was issued.",
             };
         }
 

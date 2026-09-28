@@ -26,7 +26,7 @@ router.post("/hub-sync", async (req, res) => {
 // Public payment configuration is safe to expose; credentials remain server-only.
 router.get("/payment-config", (_req, res) => res.json({
     enabled: String(process.env.PAYSTACK_ENABLED || "false").toLowerCase() === "true" && !!process.env.PAYSTACK_SECRET_KEY,
-    provider: "Paystack M-PESA",
+    provider: "M-PESA",
     currency: "KSh",
     plans: Object.values(PLANS),
 }));
@@ -36,7 +36,7 @@ router.post("/paystack/charge", async (req, res) => {
         const charge = await paystackPayments.initializeCharge(req.body || {});
         return res.status(202).json(charge);
     } catch (error) {
-        return res.status(error.status || 500).json({ error: error.message || "Could not start Paystack payment." });
+        return res.status(error.status || 500).json({ error: error.message || "Could not start the M-PESA payment." });
     }
 });
 
@@ -45,13 +45,13 @@ router.post("/paystack/verify", async (req, res) => {
         const result = await paystackPayments.verifyAndGrant(req.body && req.body.reference);
         return res.json(result);
     } catch (error) {
-        return res.status(error.status || 500).json({ error: error.message || "Could not verify Paystack payment." });
+        return res.status(error.status || 500).json({ error: error.message || "Could not verify the payment." });
     }
 });
 
 // Public Firebox pairing endpoints intentionally do not require an account.
 router.post("/token", async (req, res) => {
-    return res.status(402).json({ error: "A verified Paystack access plan is required to issue a Firebox token." });
+    return res.status(402).json({ error: "A verified payment plan is required to issue a Firebox token." });
 });
 
 router.post("/token/pair-code", async (req, res) => {

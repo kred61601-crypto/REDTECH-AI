@@ -35,11 +35,15 @@ test("the public entry point separates reusable token and pairing-code pages", (
     assert.match(tokenSource, /FIREBOX/);
     assert.match(tokenSource, /\/api\/bot\/paystack\/charge/);
     assert.match(tokenSource, /\/api\/bot\/paystack\/verify/);
-    assert.match(tokenSource, /PAYSTACK M-PESA READY/);
+    assert.match(tokenSource, /M-PESA PAYMENTS READY/);
+    assert.doesNotMatch(tokenSource, /CHECKING PAYSTACK|PAYSTACK M-PESA READY|PAYSTACK RECEIPT/);
     assert.match(tokenSource, /CHECK PAYMENT STATUS/);
     assert.match(tokenSource, /id="rotating-copy"/);
+    assert.match(tokenSource, /id="whatsapp-phone"/);
+    assert.match(tokenSource, /id="payer-phone"/);
+    assert.match(tokenSource, /M-PESA number can be different/);
     assert.match(tokenSource, /M-PESA PHONE/);
-    assert.match(tokenSource, /PAYSTACK RECEIPT/);
+    assert.match(tokenSource, /RECEIPT EMAIL/);
     assert.match(tokenSource, /issued only after payment verification/);
     assert.match(tokenSource, /window\.matchMedia\("\(prefers-reduced-motion: reduce\)"\)/);
     assert.doesNotMatch(tokenSource, /textContent=copyLines\[0\];return/);
@@ -53,7 +57,7 @@ test("the public entry point separates reusable token and pairing-code pages", (
         assert.match(source, /KSh 99/);
         assert.match(source, /\/api\/bot\/payment-config/);
     }
-    assert.match(codeSource, /CHOOSE A PAYSTACK M-PESA PLAN/);
+    assert.match(codeSource, /CHOOSE AN M-PESA ACCESS PLAN/);
     assert.doesNotMatch(codeSource, /STK PUSH OFFLINE/);
     assert.doesNotMatch(tokenSource, /Continue to pairing|Create account|Sign in/);
     assert.doesNotMatch(codeSource, /Continue to pairing|Create account|Sign in/);
@@ -138,7 +142,7 @@ test("the bot API remains session-scoped for each visitor", () => {
     assert.match(routes, /router\.get\("\/payment-config"/);
     assert.match(routes, /PAYSTACK_ENABLED/);
     assert.match(routes, /router\.post\("\/token"/);
-    assert.match(routes, /status\(402\)\.json\(\{ error: "A verified Paystack access plan is required/);
+    assert.match(routes, /status\(402\)\.json\(\{ error: "A verified payment plan is required/);
     assert.match(routes, /router\.post\("\/token\/pair-code"/);
 });
 
