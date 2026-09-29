@@ -27,6 +27,7 @@ router.post("/hub-sync", async (req, res) => {
 router.get("/payment-config", (_req, res) => res.json({
     enabled: String(process.env.PAYSTACK_ENABLED || "false").toLowerCase() === "true" && !!process.env.PAYSTACK_SECRET_KEY,
     provider: "M-PESA",
+    providers: ["mpesa", "airtel", "card"],
     currency: "KSh",
     plans: Object.values(PLANS),
 }));
@@ -36,7 +37,7 @@ router.post("/paystack/charge", async (req, res) => {
         const charge = await paystackPayments.initializeCharge(req.body || {});
         return res.status(202).json(charge);
     } catch (error) {
-        return res.status(error.status || 500).json({ error: error.message || "Could not start the M-PESA payment." });
+        return res.status(error.status || 500).json({ error: error.message || "Could not start the payment." });
     }
 });
 

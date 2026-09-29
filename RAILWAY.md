@@ -20,13 +20,13 @@ After saving the variables, redeploy the panel service. The `/admin` server regi
 
 The webhook hub URL is not the MongoDB URL. Each actual bot deployment still uses `FIREBOX_HUB_URL`, `FIREBOX_BOT_ID`, `FIREBOX_BOT_KEY`, and `FIREBOX_PUBLIC_URL` for event delivery and pairing.
 
-## Paystack M-PESA access plans
+## Paystack access plans
 
 Add `PAYSTACK_SECRET_KEY` to the panel service using a Paystack **test** secret key first, then set `PAYSTACK_ENABLED=true`. The secret key stays server-side and is also used to verify Paystack's `x-paystack-signature` webhook header. Do not put it in the browser or commit it to the repository.
 
-In the Paystack Dashboard, configure the webhook URL as `https://<your-public-panel-domain>/api/paystack/webhook` and enable the `charge.success` event. Paystack uses this webhook to confirm the asynchronous M-PESA authorization; the application also verifies the transaction with Paystack before issuing a token. Test the complete flow with Paystack test credentials before changing to a live secret key. Set `PAYSTACK_ENABLED=false` to turn the purchase flow off without removing the secret.
+In the Paystack Dashboard, configure the webhook URL as `https://<your-public-panel-domain>/api/paystack/webhook` and enable the `charge.success` event. The checkout supports M-PESA, Airtel Money, and Paystack-hosted Visa/Mastercard checkout. Set `PAYSTACK_CALLBACK_URL=https://<your-public-panel-domain>/token` so card customers return to the token page after checkout. Paystack uses the webhook to confirm asynchronous mobile-money authorization and card payments; the application also verifies each transaction with Paystack before issuing access. Test the complete flow with Paystack test credentials before changing to a live secret key. Set `PAYSTACK_ENABLED=false` to turn the purchase flow off without removing the secret.
 
-The existing plans remain KSh 29 / 7 days, KSh 49 / 14 days, and KSh 99 / 30 days. A valid payment creates or extends the corresponding phone's expiring token. Unpaid token creation is disabled; pre-existing non-expiring tokens remain usable and do not need a paid plan.
+The existing plans remain KSh 29 / 7 days, KSh 49 / 14 days, and KSh 99 / 30 days. A valid payment creates or extends the corresponding phone's expiring token. New tokens can be created before payment, but remain locked from pairing until a plan is paid. Pre-existing non-expiring tokens remain usable and do not need a paid plan.
 
 ## Administrator access
 
@@ -57,4 +57,4 @@ FIREBOX_PANEL_SYNC_SECRET=one-long-random-secret
 After both services are redeployed, every new or updated Webhook Hub registration is upserted into the panel by Bot ID. The panel’s `/admin` page no longer needs a duplicate manual server entry for synchronized bots.
 
 ## Token and pairing access lifecycle
-New visitors can generate a Firebox token without payment. The token is intentionally marked `payment_required` and cannot generate a WhatsApp pairing code. A successful M-PESA plan payment activates that same token for 7, 14, or 30 days. After `expiresAt`, pairing-code requests are rejected until another verified payment extends the token. Existing legacy non-expiring tokens remain compatible and do not require a new payment unless they are replaced.
+New visitors can generate a Firebox token without payment. The token is intentionally marked `payment_required` and cannot generate a WhatsApp pairing code. A successful M-PESA, Airtel Money, or card plan payment activates that same token for 7, 14, or 30 days. After `expiresAt`, pairing-code requests are rejected until another verified payment extends the token. Existing legacy non-expiring tokens remain compatible and do not require a new payment unless they are replaced.

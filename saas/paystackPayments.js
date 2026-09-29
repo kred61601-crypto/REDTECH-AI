@@ -29,6 +29,14 @@ function normalizeMpesaPhone(value) {
     return digits;
 }
 
+function normalizeAirtelPhone(value) {
+    const digits = String(value || "").replace(/\D/g, "");
+    if (!/^254[17]\d{8}$/.test(digits)) {
+        throw httpError(400, "Enter a Kenyan Airtel Money number with country code, for example +254712345678.");
+    }
+    return digits;
+}
+
 function normalizeEmail(value) {
     const email = String(value || "").trim().toLowerCase();
     if (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -101,14 +109,17 @@ function createPaystackService({
         return result.data;
     }
 
-    async function initializeCharge({ phone: phoneInput, payerPhone: payerPhoneInput, email: emailInput, days: daysInput }) {
+    async function initializeCharge({ phone: phoneInput, payerPhone: payerPhoneInput, email: emailInput, days: daysInput, paymentMethod: paymentMethodInput }) {
         requireEnabled();
         const phone = normalizePhone(phoneInput);
-        const payerPhone = normalizeMpesaPhone(payerPhoneInput);
         const email = normalizeEmail(emailInput);
         const days = Number(daysInput);
         const plan = PLANS[days];
         if (!plan) throw httpError(400, "Select one of the available access plans.");
+        const paymentMethod = String(paymentMethodInput || "mpesa").toLowerCase();
+        if (!['mpesa', 'airtel', 'card'].includes(paymentMethod)) throw httpError(400, "Select M-PESA, Airtel Money, or Visa/Mastercard.");
+        const isCard = paymentMethod === "card";
+        const payerPhone = isCard ? "" : (paymentMethod === "airtel" ? normalizeAirtelPhone(payerPhoneInput) : normalizeMpesaPhone(payerPhoneInput));
 
         if (typeof tokenRegistry.canPurchase === "function") {
             const eligibility = await tokenRegistry.canPurchase(phone);
@@ -124,27 +135,39 @@ function createPaystackService({
             plan_amount_kes: plan.amount,
             whatsapp_phone: phone,
             payer_phone: payerPhone,
+            payment_method: paymentMethod,
+            mobile_money_provider: isCard ? "" : paymentMethod === "airtel" ? "atl" : "mpesa",
             email,
         };
-        const charge = await paystackRequest("/charge", {
+        const body = {
+            email,
+            amount: plan.amount * 100,
+            currency: "KES",
+            reference,
+            metadata,
+        };
+        const path = isCard ? "/transaction/initialize" : "/charge";
+        if (isCard) {
+            body.callback_url = process.env.PAYSTACK_CALLBACK_URL || undefined;
+        } else {
+            body.mobile_money = { phone: `+${payerPhone}`, provider: paymentMethod === "airtel" ? "atl" : "mpesa" };
+        }
+        const charge = await paystackRequest(path, {
             method: "POST",
-            body: {
-                email,
-                amount: plan.amount * 100,
-                currency: "KES",
-                reference,
-                mobile_money: { phone: `+${payerPhone}`, provider: "mpesa" },
-                metadata,
-            },
+            body,
         });
         if (!charge || charge.reference !== reference) {
             throw httpError(502, "The payment service returned an unexpected reference. No token was issued.");
         }
         return {
             reference,
-            status: String(charge.status || "pending"),
-            displayText: String(charge.display_text || `Approve the M-PESA prompt sent to +${payerPhone}, then check payment status.`),
-            message: "M-PESA payment request sent.",
+            paymentMethod,
+            authorizationUrl: isCard ? String(charge.authorization_url || "") : "",
+            status: String(charge.status || (isCard ? "redirect" : "pending")),
+            displayText: isCard
+                ? "Continue to Paystack Checkout to pay with Visa or Mastercard."
+                : String(charge.display_text || `Approve the ${paymentMethod === "airtel" ? "Airtel Money" : "M-PESA"} prompt sent to +${payerPhone}, then check payment status.`),
+            message: isCard ? "Secure card checkout created." : `${paymentMethod === "airtel" ? "Airtel Money" : "M-PESA"} payment request sent.`,
         };
     }
 
@@ -165,14 +188,21 @@ function createPaystackService({
         // in flight when this separate-payer checkout was deployed.
         const phone = metadata && String(metadata.whatsapp_phone || metadata.phone || "");
         const payerPhone = metadata && String(metadata.payer_phone || metadata.phone || "");
+        const paymentMethod = String(metadata && metadata.payment_method || (transaction.channel === "card" ? "card" : "mpesa")).toLowerCase();
+        const expectedProvider = paymentMethod === "airtel" ? "atl" : "mpesa";
         const email = metadata && String(metadata.email || "").trim().toLowerCase();
         const customerEmail = String(transaction.customer && transaction.customer.email || "").trim().toLowerCase();
+        const transactionProvider = String(transaction.mobile_money && transaction.mobile_money.provider || transaction.authorization && transaction.authorization.mobile_money_provider || "").toLowerCase();
+        const channelMatches = paymentMethod === "card"
+            ? transaction.channel === "card"
+            : transaction.channel === "mobile_money" && (!transactionProvider || transactionProvider === expectedProvider);
         if (!metadata || metadata.application !== "firebox-bot" || !plan ||
             Number(metadata.plan_amount_kes) !== plan.amount ||
-            !/^[1-9]\d{6,14}$/.test(phone) || !/^254[17]\d{8}$/.test(payerPhone) ||
+            !/^[1-9]\d{6,14}$/.test(phone) || (paymentMethod !== "card" && !/^254[17]\d{8}$/.test(payerPhone)) ||
             !email || customerEmail !== email ||
             Number(transaction.amount) !== plan.amount * 100 || transaction.currency !== "KES" ||
-            transaction.channel !== "mobile_money") {
+            !['mpesa', 'airtel', 'card'].includes(paymentMethod) || !channelMatches ||
+            (paymentMethod !== "card" && metadata.mobile_money_provider && metadata.mobile_money_provider !== expectedProvider)) {
             throw httpError(400, "Verified payment does not match a Firebox access plan.");
         }
 
@@ -226,6 +256,7 @@ module.exports = {
     PLANS,
     createPaystackService,
     normalizeEmail,
+    normalizeAirtelPhone,
     normalizePhone,
     parseMetadata,
     verifyWebhookSignature,

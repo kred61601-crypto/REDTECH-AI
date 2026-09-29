@@ -81,6 +81,33 @@ test("initializes Paystack's KES M-PESA charge with a server-generated reference
     assert.equal(charge.status, "pay_offline");
 });
 
+test("initializes a Kenya Airtel Money charge with the Airtel provider code", async () => {
+    let sent;
+    const service = makeService(async (url, options) => {
+        sent = { url, body: JSON.parse(options.body) };
+        return jsonResponse({ status: true, data: { reference: sent.body.reference, status: "pay_offline", display_text: "Approve the Airtel prompt." } });
+    });
+    const charge = await service.initializeCharge({ phone: "254769564723", payerPhone: "254712345678", email: "buyer@example.com", days: 14, paymentMethod: "airtel" });
+    assert.equal(sent.url, "https://api.paystack.co/charge");
+    assert.deepEqual(sent.body.mobile_money, { phone: "+254712345678", provider: "atl" });
+    assert.equal(sent.body.metadata.payment_method, "airtel");
+    assert.equal(charge.paymentMethod, "airtel");
+});
+
+test("initializes hosted Visa/Mastercard checkout without requiring a mobile-money number", async () => {
+    let sent;
+    const service = makeService(async (url, options) => {
+        sent = { url, body: JSON.parse(options.body) };
+        return jsonResponse({ status: true, data: { reference: sent.body.reference, authorization_url: "https://checkout.paystack.com/example" } });
+    });
+    const charge = await service.initializeCharge({ phone: "254769564723", email: "buyer@example.com", days: 30, paymentMethod: "card" });
+    assert.equal(sent.url, "https://api.paystack.co/transaction/initialize");
+    assert.equal(sent.body.mobile_money, undefined);
+    assert.equal(sent.body.metadata.payment_method, "card");
+    assert.equal(charge.authorizationUrl, "https://checkout.paystack.com/example");
+    assert.equal(charge.status, "redirect");
+});
+
 test("rejects unsupported plans and non-Kenyan numbers without contacting Paystack", async () => {
     let calls = 0;
     const service = makeService(async () => { calls++; return jsonResponse({ status: true, data: {} }); });
@@ -113,6 +140,17 @@ test("only a verified, matching successful transaction grants the selected plan"
     const result = await service.verifyAndGrant(reference);
     assert.equal(result.status, "success");
     assert.equal(result.token, "FIREBOX-ABCD-2345");
+    assert.deepEqual(registry.applied, [{ phone: "254769564723", days: 7, reference }]);
+});
+
+test("verifies a successful card transaction and grants the matching plan", async () => {
+    const reference = `fb-${"9".repeat(32)}`;
+    const registry = {};
+    const base = validTransaction(reference);
+    const body = { ...base, channel: "card", metadata: { ...base.metadata, payment_method: "card", payer_phone: "", mobile_money_provider: "" } };
+    const service = makeService(async () => jsonResponse({ status: true, data: body }), registry);
+    const result = await service.verifyAndGrant(reference);
+    assert.equal(result.status, "success");
     assert.deepEqual(registry.applied, [{ phone: "254769564723", days: 7, reference }]);
 });
 

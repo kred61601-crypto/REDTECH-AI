@@ -35,7 +35,7 @@ test("the public entry point separates reusable token and pairing-code pages", (
     assert.match(tokenSource, /FIREBOX/);
     assert.match(tokenSource, /\/api\/bot\/paystack\/charge/);
     assert.match(tokenSource, /\/api\/bot\/paystack\/verify/);
-    assert.match(tokenSource, /M-PESA PAYMENTS READY/);
+    assert.match(tokenSource, /PAYMENTS READY \/\/ M-PESA, AIRTEL, CARD/);
     assert.doesNotMatch(tokenSource, /CHECKING PAYSTACK|PAYSTACK M-PESA READY|PAYSTACK RECEIPT/);
     assert.match(tokenSource, /CHECK PAYMENT STATUS/);
     assert.match(tokenSource, /id="rotating-copy"/);
@@ -44,7 +44,11 @@ test("the public entry point separates reusable token and pairing-code pages", (
     assert.match(tokenSource, /PAIRING LOCKED/);
     assert.match(tokenSource, /POST",body:JSON.stringify\(\{phone\}\)/);
     assert.match(tokenSource, /id="payer-phone"/);
-    assert.match(tokenSource, /M-PESA PHONE/);
+    assert.match(tokenSource, /M-PESA SOURCE/);
+    assert.match(tokenSource, /id="payment-method"/);
+    assert.match(tokenSource, /AIRTEL MONEY/);
+    assert.match(tokenSource, /VISA \/ MASTERCARD/);
+    assert.match(tokenSource, /paymentMethod/);
     assert.match(tokenSource, /RECEIPT EMAIL/);
     assert.match(tokenSource, /Payment is required only before it can generate pairing codes/);
     assert.match(tokenSource, /window\.matchMedia\("\(prefers-reduced-motion: reduce\)"\)/);
