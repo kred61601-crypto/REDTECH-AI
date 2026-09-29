@@ -109,6 +109,25 @@ function expiryDate(value) {
 
 module.exports = {
     normalizePhone,
+    async resolveForPayment(token) {
+        const normalized = String(token || "").trim().toUpperCase();
+        if (!tokenPattern.test(normalized)) throw new Error("Invalid Firebox token format.");
+        const hash = hashToken(normalized);
+        let record;
+        let records;
+        const mongo = await useMongo();
+        if (mongo) {
+            record = await FireboxToken.findOne({ tokenHash: hash }).lean();
+        } else {
+            records = readRecords();
+            record = records.find(item => item.tokenHash === hash);
+        }
+        if (!record || !["active", "payment_required"].includes(record.status)) {
+            throw new Error("Firebox token not found or inactive.");
+        }
+        if (record.expiresAt && Date.parse(record.expiresAt) < Date.now()) throw new Error("Firebox token has expired.");
+        return { token: normalized, phone: decryptPhone(record), record, records, mongo };
+    },
     async create(phone) {
         const normalized = normalizePhone(phone);
         const token = makeToken();

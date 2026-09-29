@@ -21,6 +21,7 @@ const botInstanceSource = fs.readFileSync(path.join(__dirname, "../saas/botInsta
 test("the public entry point separates reusable token and pairing-code pages", () => {
     assert.match(indexSource, /app\.get\("\/", \(_req, res\) => res\.redirect\("\/token"\)\)/);
     assert.match(indexSource, /app\.get\("\/token", \(_req, res\) => res\.sendFile\(tokenWorkspace\)\)/);
+    assert.match(indexSource, /app\.get\("\/payment", \(_req, res\) => res\.sendFile\(paymentWorkspace\)\)/);
     assert.match(indexSource, /app\.get\("\/code", \(_req, res\) => res\.sendFile\(codeWorkspace\)\)/);
     assert.match(indexSource, /app\.use\("\/api\/auth", require\("\.\/saas\/authApiRoutes"\)\)/);
     assert.match(indexSource, /app\.get\("\/admin", \(req, res\) => \{ if \(!isAdminAuthenticated\(req\)\) return res\.sendFile\(adminAccessWorkspace\)/);
@@ -31,41 +32,35 @@ test("the public entry point separates reusable token and pairing-code pages", (
     assert.match(indexSource, /app\.get\("\/login", \(_req, res\) => res\.redirect\("\/token"\)\)/);
     assert.match(indexSource, /app\.get\("\/servers\.html", \(_req, res\) => res\.redirect\("\/token"\)\)/);
     const tokenSource = fs.readFileSync(path.join(__dirname, "../public/token.html"), "utf8");
+    const paymentSource = fs.readFileSync(path.join(__dirname, "../public/payment.html"), "utf8");
     const codeSource = fs.readFileSync(path.join(__dirname, "../public/code.html"), "utf8");
     assert.match(tokenSource, /FIREBOX/);
-    assert.match(tokenSource, /\/api\/bot\/paystack\/charge/);
-    assert.match(tokenSource, /\/api\/bot\/paystack\/verify/);
-    assert.match(tokenSource, /PAYMENTS READY \/\/ M-PESA, AIRTEL, CARD/);
-    assert.doesNotMatch(tokenSource, /CHECKING PAYSTACK|PAYSTACK M-PESA READY|PAYSTACK RECEIPT/);
-    assert.match(tokenSource, /CHECK PAYMENT STATUS/);
-    assert.match(tokenSource, /id="rotating-copy"/);
-    assert.match(tokenSource, /id="whatsapp-phone"/);
+    assert.doesNotMatch(tokenSource, /\/api\/bot\/paystack\/charge|\/api\/bot\/paystack\/verify/);
+    assert.match(tokenSource, /id="phone"/);
     assert.match(tokenSource, /GENERATE FREE TOKEN/);
-    assert.match(tokenSource, /PAIRING LOCKED/);
-    assert.match(tokenSource, /POST",body:JSON.stringify\(\{phone\}\)/);
-    assert.match(tokenSource, /id="payer-phone"/);
-    assert.match(tokenSource, /M-PESA SOURCE/);
-    assert.match(tokenSource, /id="payment-method"/);
-    assert.match(tokenSource, /AIRTEL MONEY/);
-    assert.match(tokenSource, /VISA \/ MASTERCARD/);
-    assert.match(tokenSource, /paymentMethod/);
-    assert.match(tokenSource, /RECEIPT EMAIL/);
-    assert.match(tokenSource, /Payment is required only before it can generate pairing codes/);
-    assert.match(tokenSource, /window\.matchMedia\("\(prefers-reduced-motion: reduce\)"\)/);
-    assert.doesNotMatch(tokenSource, /textContent=copyLines\[0\];return/);
+    assert.match(tokenSource, /COPY TOKEN/);
+    assert.match(tokenSource, /SUBSCRIBE &amp; UNLOCK PAIRING/);
+    assert.match(paymentSource, /\/api\/bot\/paystack\/charge/);
+    assert.match(paymentSource, /\/api\/bot\/paystack\/verify/);
+    assert.match(paymentSource, /VISA \/ MASTERCARD/);
+    assert.match(paymentSource, /Airtel Money/);
+    assert.match(paymentSource, /M-PESA/);
+    assert.match(paymentSource, /id="token"/);
+    assert.match(paymentSource, /CHECK PAYMENT STATUS/);
     assert.match(codeSource, /FIREBOX/);
     assert.match(codeSource, /\/api\/bot\/token\/pair-code/);
     assert.match(codeSource, /FORGOT TOKEN\? CHAT ADMIN/);
     assert.match(codeSource, /wa\.me\/254769564723/);
-    for (const source of [tokenSource]) {
+    for (const source of [paymentSource]) {
         assert.match(source, /KSh 29/);
         assert.match(source, /KSh 49/);
         assert.match(source, /KSh 99/);
-        assert.match(source, /\/api\/bot\/payment-config/);
     }
+    assert.doesNotMatch(tokenSource, /PAYMENT METHOD|AIRTEL MONEY|VISA \/ MASTERCARD|paystack\/charge/);
     assert.match(codeSource, /CHOOSE AN M-PESA PLAN TO UNLOCK PAIRING/);
     assert.doesNotMatch(codeSource, /STK PUSH OFFLINE/);
     assert.doesNotMatch(tokenSource, /Continue to pairing|Create account|Sign in/);
+    assert.doesNotMatch(paymentSource, /Create account|Sign in/);
     assert.doesNotMatch(codeSource, /Continue to pairing|Create account|Sign in/);
     assert.doesNotMatch(workspaceSource, /dashboard\/auth\/me/);
     assert.match(workspaceSource, /id="logout"/);

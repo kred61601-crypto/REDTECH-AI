@@ -108,6 +108,30 @@ test("initializes hosted Visa/Mastercard checkout without requiring a mobile-mon
     assert.equal(charge.status, "redirect");
 });
 
+test("initializes checkout from the selected Firebox token without trusting a client phone", async () => {
+    let sent;
+    const service = createPaystackService({
+        tokenRegistry: {
+            async resolveForPayment(token) {
+                assert.equal(token, "FIREBOX-ABCD-2345");
+                return { phone: "254769564723" };
+            },
+            async canPurchase(phone) {
+                assert.equal(phone, "254769564723");
+                return { allowed: true };
+            },
+        },
+        fetchImpl: async (url, options) => {
+            sent = { url, body: JSON.parse(options.body) };
+            return jsonResponse({ status: true, data: { reference: sent.body.reference, authorization_url: "https://checkout.paystack.com/token" } });
+        },
+        getSecret: () => "sk_test_unit_test_key",
+        isEnabled: () => true,
+    });
+    await service.initializeCharge({ token: "firebox-abcd-2345", phone: "254000000000", email: "buyer@example.com", days: 7, paymentMethod: "card" });
+    assert.equal(sent.body.metadata.whatsapp_phone, "254769564723");
+});
+
 test("rejects unsupported plans and non-Kenyan numbers without contacting Paystack", async () => {
     let calls = 0;
     const service = makeService(async () => { calls++; return jsonResponse({ status: true, data: {} }); });
