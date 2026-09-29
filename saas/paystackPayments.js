@@ -109,9 +109,18 @@ function createPaystackService({
         return result.data;
     }
 
-    async function initializeCharge({ phone: phoneInput, payerPhone: payerPhoneInput, email: emailInput, days: daysInput, paymentMethod: paymentMethodInput }) {
+    async function initializeCharge({ token: tokenInput, phone: phoneInput, payerPhone: payerPhoneInput, email: emailInput, days: daysInput, paymentMethod: paymentMethodInput }) {
         requireEnabled();
-        const phone = normalizePhone(phoneInput);
+        let phone;
+        if (tokenInput) {
+            if (typeof tokenRegistry.resolveForPayment !== "function") throw httpError(503, "Token payment lookup is not available.");
+            try {
+                const resolved = await tokenRegistry.resolveForPayment(String(tokenInput).trim().toUpperCase());
+                phone = normalizePhone(resolved.phone);
+            } catch (error) {
+                throw httpError(400, error.message || "Enter a valid Firebox token.");
+            }
+        } else phone = normalizePhone(phoneInput);
         const email = normalizeEmail(emailInput);
         const days = Number(daysInput);
         const plan = PLANS[days];

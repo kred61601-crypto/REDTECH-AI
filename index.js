@@ -124,6 +124,7 @@ app.use("/api/admin/firebox-database", require("./saas/fireboxDatabaseApi").crea
 
 const serverWorkspace = path.join(__dirname, "public", "servers.html");
 const tokenWorkspace = path.join(__dirname, "public", "token.html");
+const paymentWorkspace = path.join(__dirname, "public", "payment.html");
 const codeWorkspace = path.join(__dirname, "public", "code.html");
 const adminWorkspace = path.join(__dirname, "public", "admin.html");
 const authWorkspace = path.join(__dirname, "public", "auth.html");
@@ -135,6 +136,7 @@ const settingsWorkspace = path.join(__dirname, "public", "settings.html");
 // share the same in-memory BotInstance.
 app.get("/", (_req, res) => res.redirect("/token"));
 app.get("/token", (_req, res) => res.sendFile(tokenWorkspace));
+app.get("/payment", (_req, res) => res.sendFile(paymentWorkspace));
 app.get("/code", (_req, res) => res.sendFile(codeWorkspace));
 app.get("/admin", (req, res) => { if (!isAdminAuthenticated(req)) return res.sendFile(adminAccessWorkspace); return res.sendFile(adminWorkspace); });
 app.get("/auth", (_req, res) => res.redirect("/"));
