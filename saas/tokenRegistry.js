@@ -5,7 +5,15 @@ const mongoose = require("mongoose");
 const { initDb, isOnline } = require("../firebox/db");
 
 const storePath = path.join(__dirname, "..", "database", "firebox_tokens.json");
-const encryptionKey = crypto.createHash("sha256").update(String(process.env.FIREBOX_TOKEN_SECRET || process.env.SESSION_SECRET || "firebox-development-secret")).digest();
+const configuredSecrets = [
+    process.env.FIREBOX_TOKEN_SECRET,
+    process.env.FIREBOX_TOKEN_SECRET_PREVIOUS,
+    process.env.SESSION_SECRET,
+    process.env.SESSION_SECRET_PREVIOUS,
+    "firebox-development-secret",
+].filter(value => String(value || "").length > 0).map(value => String(value));
+const encryptionKeys = [...new Set(configuredSecrets)].map(secret => crypto.createHash("sha256").update(secret).digest());
+const encryptionKey = encryptionKeys[0];
 const tokenPattern = /^FIREBOX-[A-Z0-9]{4}-[A-Z0-9]{4}$/;
 
 const tokenSchema = new mongoose.Schema({
@@ -41,9 +49,17 @@ function encryptText(value) {
     return { iv: iv.toString("base64url"), data: encrypted.toString("base64url"), tag: cipher.getAuthTag().toString("base64url") };
 }
 function decryptText(payload) {
-    const decipher = crypto.createDecipheriv("aes-256-gcm", encryptionKey, Buffer.from(payload.iv, "base64url"));
-    decipher.setAuthTag(Buffer.from(payload.tag, "base64url"));
-    return Buffer.concat([decipher.update(Buffer.from(payload.data, "base64url")), decipher.final()]).toString("utf8");
+    let lastError;
+    for (const key of encryptionKeys) {
+        try {
+            const decipher = crypto.createDecipheriv("aes-256-gcm", key, Buffer.from(payload.iv, "base64url"));
+            decipher.setAuthTag(Buffer.from(payload.tag, "base64url"));
+            return Buffer.concat([decipher.update(Buffer.from(payload.data, "base64url")), decipher.final()]).toString("utf8");
+        } catch (error) {
+            lastError = error;
+        }
+    }
+    throw lastError || new Error("Unable to decrypt Firebox token data.");
 }
 function decryptPhone(record) { return decryptText(record.phone); }
 function makeToken() {
@@ -62,14 +78,20 @@ async function useMongo() {
 }
 function plain(record) {
     const item = record.toObject ? record.toObject() : record;
+    let token = null;
+    let phone = null;
+    let decryptionError = null;
+    try { token = item.tokenCiphertext ? decryptText(item.tokenCiphertext) : null; } catch (error) { decryptionError = error; }
+    try { phone = decryptPhone(item); } catch (error) { decryptionError = decryptionError || error; }
     return {
-        token: item.tokenCiphertext ? decryptText(item.tokenCiphertext) : null,
-        phone: decryptPhone(item),
+        token,
+        phone,
         status: item.status,
         createdAt: item.createdAt,
         lastUsedAt: item.lastUsedAt,
         expiresAt: item.expiresAt,
         pairingAttempts: Number(item.pairingAttempts || 0),
+        decryptionError: decryptionError ? "TOKEN_SECRET_MISMATCH" : null,
     };
 }
 function samePhone(record, normalized) {

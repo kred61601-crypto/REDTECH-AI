@@ -9,7 +9,7 @@ MONGODB_DATABASE=firebox
 MONGODB_SERVERS_COLLECTION=servers
 ```
 
-The same MongoDB service is also used for Firebox token records and Baileys authentication state. The bot stores the token, protected phone number, credentials, and signal keys under the bot's stable token namespace in MongoDB, so replacing the Railway container no longer requires WhatsApp pairing again. Set a stable `SESSION_SECRET` (and optionally `FIREBOX_TOKEN_SECRET`); changing these secrets makes previously encrypted token records unreadable.
+The same MongoDB service is also used for Firebox token records and Baileys authentication state. The bot stores the token, protected phone number, credentials, and signal keys under the bot's stable token namespace in MongoDB, so replacing the Railway container no longer requires WhatsApp pairing again. Set a stable `SESSION_SECRET` (and optionally `FIREBOX_TOKEN_SECRET`) and keep those values unchanged. During a deliberate secret rotation, temporarily set `FIREBOX_TOKEN_SECRET_PREVIOUS` (or `SESSION_SECRET_PREVIOUS`) to the old value while the new value is active; the token registry will try both keys. If neither current nor previous secret can decrypt a record, the admin overview remains available and marks that record as unavailable, but the original token cannot be recovered without the old secret.
 
 After deploying this version, pair each existing bot once more. That first
 connection migrates its live Baileys credentials into MongoDB. Later Railway

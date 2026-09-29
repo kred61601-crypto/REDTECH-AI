@@ -47,4 +47,21 @@ test("verified paid plans issue expiring tokens and repeated references do not d
     assert.equal((await registry.getPaidTokenByReference(secondReference)).token, first.token);
 });
 
+test("admin token listing tolerates a record encrypted with an unavailable secret", async () => {
+    const records = JSON.parse(fs.readFileSync(storePath, "utf8"));
+    records.push({
+        tokenHash: "unreadable-token-record",
+        tokenCiphertext: { iv: "AA", data: "AA", tag: "AA" },
+        phone: { iv: "AA", data: "AA", tag: "AA" },
+        status: "active",
+        pairingAttempts: 0,
+    });
+    fs.writeFileSync(storePath, JSON.stringify(records));
+    const listed = await registry.listAdmin();
+    const unreadable = listed.find(item => item.token === null && item.phone === null);
+    assert.ok(unreadable);
+    assert.equal(unreadable.decryptionError, "TOKEN_SECRET_MISMATCH");
+    assert.equal(listed.length, records.length);
+});
+
 test.after(() => { try { fs.unlinkSync(storePath); } catch {} });
