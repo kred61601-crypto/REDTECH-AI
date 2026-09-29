@@ -10,6 +10,14 @@ test("token registry creates opaque tokens and resolves the protected phone inte
     try { fs.unlinkSync(storePath); } catch {}
     const token = await registry.create("+254 769 564 723");
     assert.match(token, /^FIREBOX-[A-Z0-9]{4}-[A-Z0-9]{4}$/);
+    assert.equal((await registry.listAdmin())[0].status, "payment_required");
+    await assert.rejects(
+        () => registry.resolve(token),
+        /paid access plan is required/
+    );
+    const paid = await registry.applyPaidPlan({ phone: "254769564723", days: 7, reference: `fb-${"0".repeat(32)}` });
+    assert.equal(paid.token, token);
+    assert.equal(paid.planDays, 7);
     const resolved = await registry.resolve(token);
     assert.equal(resolved.phone, "254769564723");
     assert.equal(resolved.record.status, "active");

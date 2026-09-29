@@ -55,3 +55,6 @@ FIREBOX_PANEL_SYNC_SECRET=one-long-random-secret
 ```
 
 After both services are redeployed, every new or updated Webhook Hub registration is upserted into the panel by Bot ID. The panel’s `/admin` page no longer needs a duplicate manual server entry for synchronized bots.
+
+## Token and pairing access lifecycle
+New visitors can generate a Firebox token without payment. The token is intentionally marked `payment_required` and cannot generate a WhatsApp pairing code. A successful M-PESA plan payment activates that same token for 7, 14, or 30 days. After `expiresAt`, pairing-code requests are rejected until another verified payment extends the token. Existing legacy non-expiring tokens remain compatible and do not require a new payment unless they are replaced.

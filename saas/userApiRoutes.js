@@ -51,7 +51,16 @@ router.post("/paystack/verify", async (req, res) => {
 
 // Public Firebox pairing endpoints intentionally do not require an account.
 router.post("/token", async (req, res) => {
-    return res.status(402).json({ error: "A verified payment plan is required to issue a Firebox token." });
+    try {
+        const token = await tokenRegistry.create(req.body?.phone);
+        return res.status(201).json({
+            token,
+            paymentRequired: true,
+            message: "Token created. Choose an access plan before generating a pairing code.",
+        });
+    } catch (error) {
+        return res.status(400).json({ error: error.message || "Could not create the Firebox token." });
+    }
 });
 
 router.post("/token/pair-code", async (req, res) => {

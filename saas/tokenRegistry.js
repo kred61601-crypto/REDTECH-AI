@@ -26,6 +26,7 @@ const tokenSchema = new mongoose.Schema({
     lastUsedAt: Date,
     expiresAt: Date,
     planDays: Number,
+    requiresPayment: { type: Boolean, default: false },
     paidPaymentRefs: { type: [String], default: [] },
     pairingAttempts: { type: Number, default: 0 },
 }, { collection: "firebox_tokens" });
@@ -92,6 +93,7 @@ function plain(record) {
         lastUsedAt: item.lastUsedAt,
         expiresAt: item.expiresAt,
         planDays: Number(item.planDays || 0) || null,
+        requiresPayment: item.requiresPayment === true,
         pairingAttempts: Number(item.pairingAttempts || 0),
         decryptionError: decryptionError ? "TOKEN_SECRET_MISMATCH" : null,
     };
@@ -115,16 +117,17 @@ module.exports = {
             tokenCiphertext: encryptText(token),
             phone: encryptText(normalized),
             phoneHash: phoneDigest(normalized),
-            status: "active",
+            status: "payment_required",
             createdAt: new Date(),
             lastUsedAt: null,
             expiresAt: null,
             planDays: null,
+            requiresPayment: true,
             paidPaymentRefs: [],
             pairingAttempts: 0,
         };
         if (await useMongo()) {
-            const existing = await FireboxToken.find({ status: "active" }).lean();
+            const existing = await FireboxToken.find({}).lean();
             if (existing.some(item => samePhone(item, normalized))) {
                 throw new Error("This phone number already has a Firebox token. Use the existing token instead.");
             }
@@ -145,7 +148,7 @@ module.exports = {
         const existing = records.find(item => samePhone(item, normalized));
         if (!existing) return { allowed: true };
         if (existing.status !== "active") return { allowed: true };
-        if (!existing.expiresAt) {
+        if (!existing.expiresAt && existing.requiresPayment !== true) {
             return {
                 allowed: false,
                 message: "This number already has a non-expiring Firebox token. Use that token instead of purchasing another plan.",
@@ -164,7 +167,7 @@ module.exports = {
         const existing = records.find(item => samePhone(item, normalized));
         if (existing) {
             if ((existing.paidPaymentRefs || []).includes(reference)) return plain(existing);
-            if (existing.status === "active" && !existing.expiresAt) {
+            if (existing.status === "active" && !existing.expiresAt && existing.requiresPayment !== true) {
                 throw new Error("This number already has a non-expiring Firebox token.");
             }
             const priorExpiry = expiryDate(existing.expiresAt);
@@ -175,7 +178,7 @@ module.exports = {
                 const updated = await FireboxToken.findOneAndUpdate(
                     { tokenHash: existing.tokenHash, paidPaymentRefs: { $ne: reference } },
                     {
-                        $set: { status: "active", phoneHash: phoneDigest(normalized), expiresAt, planDays: duration },
+                        $set: { status: "active", phoneHash: phoneDigest(normalized), expiresAt, planDays: duration, requiresPayment: false },
                         $addToSet: { paidPaymentRefs: reference },
                     },
                     { new: true },
@@ -190,6 +193,7 @@ module.exports = {
             existing.phoneHash = phoneDigest(normalized);
             existing.expiresAt = expiresAt.toISOString();
             existing.planDays = duration;
+            existing.requiresPayment = false;
             existing.paidPaymentRefs = [...new Set([...(existing.paidPaymentRefs || []), reference])];
             writeRecords(records);
             return plain(existing);
@@ -207,6 +211,7 @@ module.exports = {
             lastUsedAt: null,
             expiresAt: new Date(now.getTime() + duration * 24 * 60 * 60 * 1000),
             planDays: duration,
+            requiresPayment: false,
             paidPaymentRefs: [reference],
             pairingAttempts: 0,
         };
@@ -248,8 +253,12 @@ module.exports = {
             records = readRecords();
             record = records.find(item => item.tokenHash === hash);
         }
-        if (!record || record.status !== "active") throw new Error("Firebox token not found or inactive.");
+        if (!record || record.status !== "active") {
+            if (record && record.requiresPayment === true) throw new Error("A paid access plan is required before this token can generate a pairing code.");
+            throw new Error("Firebox token not found or inactive.");
+        }
         if (record.expiresAt && Date.parse(record.expiresAt) < Date.now()) throw new Error("Firebox token has expired.");
+        if (record.requiresPayment === true) throw new Error("A paid access plan is required before this token can generate a pairing code.");
         return { token: normalized, phone: decryptPhone(record), record, records, mongo: await useMongo() };
     },
     async markUsed(resolved) {

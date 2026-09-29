@@ -40,11 +40,13 @@ test("the public entry point separates reusable token and pairing-code pages", (
     assert.match(tokenSource, /CHECK PAYMENT STATUS/);
     assert.match(tokenSource, /id="rotating-copy"/);
     assert.match(tokenSource, /id="whatsapp-phone"/);
+    assert.match(tokenSource, /GENERATE FREE TOKEN/);
+    assert.match(tokenSource, /PAIRING LOCKED/);
+    assert.match(tokenSource, /POST",body:JSON.stringify\(\{phone\}\)/);
     assert.match(tokenSource, /id="payer-phone"/);
-    assert.match(tokenSource, /M-PESA number can be different/);
     assert.match(tokenSource, /M-PESA PHONE/);
     assert.match(tokenSource, /RECEIPT EMAIL/);
-    assert.match(tokenSource, /issued only after payment verification/);
+    assert.match(tokenSource, /Payment is required only before it can generate pairing codes/);
     assert.match(tokenSource, /window\.matchMedia\("\(prefers-reduced-motion: reduce\)"\)/);
     assert.doesNotMatch(tokenSource, /textContent=copyLines\[0\];return/);
     assert.match(codeSource, /FIREBOX/);
@@ -57,7 +59,7 @@ test("the public entry point separates reusable token and pairing-code pages", (
         assert.match(source, /KSh 99/);
         assert.match(source, /\/api\/bot\/payment-config/);
     }
-    assert.match(codeSource, /CHOOSE AN M-PESA ACCESS PLAN/);
+    assert.match(codeSource, /CHOOSE AN M-PESA PLAN TO UNLOCK PAIRING/);
     assert.doesNotMatch(codeSource, /STK PUSH OFFLINE/);
     assert.doesNotMatch(tokenSource, /Continue to pairing|Create account|Sign in/);
     assert.doesNotMatch(codeSource, /Continue to pairing|Create account|Sign in/);
@@ -146,7 +148,8 @@ test("the bot API remains session-scoped for each visitor", () => {
     assert.match(routes, /router\.get\("\/payment-config"/);
     assert.match(routes, /PAYSTACK_ENABLED/);
     assert.match(routes, /router\.post\("\/token"/);
-    assert.match(routes, /status\(402\)\.json\(\{ error: "A verified payment plan is required/);
+    assert.match(routes, /status\(201\)\.json/);
+    assert.match(routes, /paymentRequired: true/);
     assert.match(routes, /router\.post\("\/token\/pair-code"/);
 });
 
