@@ -32,6 +32,7 @@ test("verified paid plans issue expiring tokens and repeated references do not d
     const before = Date.now();
     const first = await registry.applyPaidPlan({ phone, days: 7, reference: firstReference });
     assert.match(first.token, /^FIREBOX-[A-Z0-9]{4}-[A-Z0-9]{4}$/);
+    assert.equal(first.planDays, 7);
     assert.ok(Date.parse(first.expiresAt) >= before + 7 * 24 * 60 * 60 * 1000 - 1000);
     assert.ok(Date.parse(first.expiresAt) <= Date.now() + 7 * 24 * 60 * 60 * 1000 + 1000);
 
@@ -42,6 +43,7 @@ test("verified paid plans issue expiring tokens and repeated references do not d
     const secondReference = `fb-${"2".repeat(32)}`;
     const extended = await registry.applyPaidPlan({ phone, days: 14, reference: secondReference });
     assert.equal(extended.token, first.token);
+    assert.equal(extended.planDays, 14);
     assert.ok(Date.parse(extended.expiresAt) >= Date.parse(first.expiresAt) + 14 * 24 * 60 * 60 * 1000 - 1000);
     assert.deepEqual(await registry.canPurchase(phone), { allowed: true });
     assert.equal((await registry.getPaidTokenByReference(secondReference)).token, first.token);
@@ -62,6 +64,13 @@ test("admin token listing tolerates a record encrypted with an unavailable secre
     assert.ok(unreadable);
     assert.equal(unreadable.decryptionError, "TOKEN_SECRET_MISMATCH");
     assert.equal(listed.length, records.length);
+});
+
+test("token deletion removes the token from the registry", async () => {
+    const token = await registry.create("254700000099");
+    assert.equal(await registry.remove(token), true);
+    assert.equal(await registry.remove(token), false);
+    await assert.rejects(() => registry.resolve(token), /not found or inactive/);
 });
 
 test.after(() => { try { fs.unlinkSync(storePath); } catch {} });

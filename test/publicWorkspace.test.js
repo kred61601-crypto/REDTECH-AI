@@ -73,6 +73,10 @@ test("the public entry point separates reusable token and pairing-code pages", (
     assert.match(adminSource, /Phone numbers are shown in full/);
     assert.doesNotMatch(adminSource, /Phone numbers are masked/);
     assert.match(adminSource, /data-copy-token/);
+    assert.match(adminSource, /data-delete-token/);
+    assert.match(adminSource, /DELETE/);
+    assert.match(adminSource, /planDays/);
+    assert.match(adminSource, /PAID ACCESS/);
     assert.doesNotMatch(adminSource, /Add bot server|Webhook hub URL|Public bot URL|Bot key|Registered bots|Tracked bot usage/);
     assert.match(adminSource, /wa\.me\/254769564723/);
     assert.match(adminAccessSource, /\/api\/auth\/admin-login/);

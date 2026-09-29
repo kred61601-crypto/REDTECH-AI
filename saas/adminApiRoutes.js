@@ -43,4 +43,14 @@ router.get("/overview", async (_req, res) => {
     res.json(data);
 });
 
+router.delete("/tokens", async (req, res) => {
+    try {
+        const removed = await tokenRegistry.remove(req.body?.token);
+        if (!removed) return res.status(404).json({ error: "Firebox token not found." });
+        return res.json({ ok: true, removed: true });
+    } catch (error) {
+        return res.status(400).json({ error: safeErrorMessage(error) });
+    }
+});
+
 module.exports = router;

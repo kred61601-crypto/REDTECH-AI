@@ -25,6 +25,7 @@ const tokenSchema = new mongoose.Schema({
     createdAt: { type: Date, default: Date.now },
     lastUsedAt: Date,
     expiresAt: Date,
+    planDays: Number,
     paidPaymentRefs: { type: [String], default: [] },
     pairingAttempts: { type: Number, default: 0 },
 }, { collection: "firebox_tokens" });
@@ -90,6 +91,7 @@ function plain(record) {
         createdAt: item.createdAt,
         lastUsedAt: item.lastUsedAt,
         expiresAt: item.expiresAt,
+        planDays: Number(item.planDays || 0) || null,
         pairingAttempts: Number(item.pairingAttempts || 0),
         decryptionError: decryptionError ? "TOKEN_SECRET_MISMATCH" : null,
     };
@@ -117,6 +119,7 @@ module.exports = {
             createdAt: new Date(),
             lastUsedAt: null,
             expiresAt: null,
+            planDays: null,
             paidPaymentRefs: [],
             pairingAttempts: 0,
         };
@@ -172,7 +175,7 @@ module.exports = {
                 const updated = await FireboxToken.findOneAndUpdate(
                     { tokenHash: existing.tokenHash, paidPaymentRefs: { $ne: reference } },
                     {
-                        $set: { status: "active", phoneHash: phoneDigest(normalized), expiresAt },
+                        $set: { status: "active", phoneHash: phoneDigest(normalized), expiresAt, planDays: duration },
                         $addToSet: { paidPaymentRefs: reference },
                     },
                     { new: true },
@@ -186,6 +189,7 @@ module.exports = {
             existing.status = "active";
             existing.phoneHash = phoneDigest(normalized);
             existing.expiresAt = expiresAt.toISOString();
+            existing.planDays = duration;
             existing.paidPaymentRefs = [...new Set([...(existing.paidPaymentRefs || []), reference])];
             writeRecords(records);
             return plain(existing);
@@ -202,6 +206,7 @@ module.exports = {
             createdAt: now,
             lastUsedAt: null,
             expiresAt: new Date(now.getTime() + duration * 24 * 60 * 60 * 1000),
+            planDays: duration,
             paidPaymentRefs: [reference],
             pairingAttempts: 0,
         };
@@ -259,6 +264,20 @@ module.exports = {
     async listAdmin() {
         if (await useMongo()) return (await FireboxToken.find({}).lean()).map(plain);
         return readRecords().map(plain);
+    },
+    async remove(token) {
+        const normalized = String(token || "").trim().toUpperCase();
+        if (!tokenPattern.test(normalized)) throw new Error("Invalid Firebox token format.");
+        const tokenHash = hashToken(normalized);
+        if (await useMongo()) {
+            const result = await FireboxToken.deleteOne({ tokenHash });
+            return result.deletedCount === 1;
+        }
+        const records = readRecords();
+        const remaining = records.filter(item => item.tokenHash !== tokenHash);
+        if (remaining.length === records.length) return false;
+        writeRecords(remaining);
+        return true;
     },
     async listActiveBotIds() {
         const isValid = item => item.status === "active" && (!item.expiresAt || Date.parse(item.expiresAt) >= Date.now());
