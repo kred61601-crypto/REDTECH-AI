@@ -51,6 +51,9 @@ test("the public entry point separates reusable token and pairing-code pages", (
     assert.match(paymentSource, /id="country"/);
     assert.match(paymentSource, /data-kes="29"/);
     assert.match(paymentSource, /Paystack will charge the fixed KES amount/);
+    assert.match(paymentSource, /data-country-method="ke"/);
+    assert.match(paymentSource, /data-country-method="international"/);
+    assert.match(paymentSource, /International visitors can pay with Visa\/Mastercard/);
     assert.match(codeSource, /FIREBOX/);
     assert.match(codeSource, /\/api\/bot\/token\/pair-code/);
     assert.match(codeSource, /FORGOT TOKEN\? CHAT ADMIN/);
