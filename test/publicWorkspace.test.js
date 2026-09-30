@@ -47,6 +47,10 @@ test("the public entry point separates reusable token and pairing-code pages", (
     assert.match(paymentSource, /M-PESA/);
     assert.match(paymentSource, /id="token"/);
     assert.match(paymentSource, /CHECK PAYMENT STATUS/);
+    assert.match(paymentSource, /YOUR COUNTRY \/\/ DISPLAY CURRENCY/);
+    assert.match(paymentSource, /id="country"/);
+    assert.match(paymentSource, /data-kes="29"/);
+    assert.match(paymentSource, /Paystack will charge the fixed KES amount/);
     assert.match(codeSource, /FIREBOX/);
     assert.match(codeSource, /\/api\/bot\/token\/pair-code/);
     assert.match(codeSource, /FORGOT TOKEN\? CHAT ADMIN/);
@@ -146,6 +150,8 @@ test("the bot API remains session-scoped for each visitor", () => {
     assert.match(routes, /botManager\.instances\.get\(userId\(req\)\)/);
     assert.match(routes, /router\.get\("\/payment-config"/);
     assert.match(routes, /PAYSTACK_ENABLED/);
+    assert.match(routes, /displayCurrencies: DISPLAY_CURRENCIES/);
+    assert.match(routes, /rateFromKes/);
     assert.match(routes, /router\.post\("\/token"/);
     assert.match(routes, /status\(201\)\.json/);
     assert.match(routes, /paymentRequired: true/);

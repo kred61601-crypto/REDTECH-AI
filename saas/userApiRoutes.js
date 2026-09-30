@@ -13,6 +13,17 @@ const usageRegistry = require("./usageRegistry");
 const tokenRegistry = require("./tokenRegistry");
 const { PLANS, createPaystackService } = require("./paystackPayments");
 
+// Display-only estimates. Paystack still charges the fixed KES plan amount.
+const DISPLAY_CURRENCIES = Object.freeze({
+    KE: Object.freeze({ code: "KES", symbol: "KSh", name: "Kenya", rateFromKes: 1 }),
+    UG: Object.freeze({ code: "UGX", symbol: "UGX", name: "Uganda", rateFromKes: 28.5 }),
+    TZ: Object.freeze({ code: "TZS", symbol: "TSh", name: "Tanzania", rateFromKes: 19.5 }),
+    NG: Object.freeze({ code: "NGN", symbol: "₦", name: "Nigeria", rateFromKes: 12.5 }),
+    GH: Object.freeze({ code: "GHS", symbol: "GH₵", name: "Ghana", rateFromKes: 0.11 }),
+    ZA: Object.freeze({ code: "ZAR", symbol: "R", name: "South Africa", rateFromKes: 0.14 }),
+    US: Object.freeze({ code: "USD", symbol: "$", name: "United States", rateFromKes: 0.0077 }),
+});
+
 const router = express.Router();
 router.use(express.json());
 const paystackPayments = createPaystackService({ tokenRegistry });
@@ -30,6 +41,7 @@ router.get("/payment-config", (_req, res) => res.json({
     provider: "Paystack",
     providers: ["mpesa", "airtel", "card"],
     currency: "KSh",
+    displayCurrencies: DISPLAY_CURRENCIES,
     plans: Object.values(PLANS),
 }));
 
