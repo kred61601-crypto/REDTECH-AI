@@ -20,7 +20,7 @@ module.exports = {
                 return await sock.sendMessage(jid, { text: "📭 No logs found." });
             }
 
-            let logText = `📜 *FIREBOX ACTIVITY LOGS*\n\n`;
+            let logText = `📜 *𝐑𝐄𝐃𝐓𝐄𝐂𝐇 ACTIVITY LOGS*\n\n`;
             
             logs.forEach((log, index) => {
                 const date = new Date(log.timestamp * 1000).toLocaleTimeString("en-GB", { hour12: false });
