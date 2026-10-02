@@ -153,15 +153,15 @@
       "required": false,
       "value": "true"
     },
-    "CUSTOM_REACT": {
-      "description": "Use custom keyboard emojis for react",
+    "REACT_EMOJIS": {
+      "description": "Reaction emojis (comma-separated)",
       "required": false,
-      "value": "true"
+      "value": "❤️,🔥,👍,😍,😂,😮,😎,🥰,👋,🤝,💯,✨,⭐,🎉,🤗,😊,🙌,💪,👏,✅,🎈,🎊,🏆,⚡,💫,👌,🤙,💖,💕,💗,👑,💎,🌟,🎯,🎨,🎭,🎪,🎢,🎡,🎠"
     },
-    "CUSTOM_REACT_EMOJIS": {
-      "description": "All keyboard emojis for auto react - bot picks random",
+    "OWNER_EMOJIS": {
+      "description": "Owner reaction emojis (comma-separated)",
       "required": false,
-      "value": "😀,😃,😄,😁,😆,😅,😂,🤣,🥲,🥹,☺️,😊,😇,🙂,🙃,😉,😌,😍,🥰,😘,😗,😙,😚,😋,😛,😝,😜,🤪,🤨,🧐,🤓,😎,🥸,🤩,🥳,😏,😒,😞,😔,😟,😕,🙁,☹️,😣,😖,😫,😩,🥺,😢,😭,😤,😠,😡,🤬,🤯,😳,🥵,🥶,😶‍🌫️,😱,😨,😰,😥,😓,🫣,🤗,🫡,🤔,🫢,🤭,🤫,🤥,😶,🫥,😐,🫤,😑,😬,🙄,😯,😦,😧,😮,😲,🥱,😴,🤤,😪,😮‍💨,😵,😵‍💫,🤐,🥴,🤢,🤮,🤧,😷,🤒,🤕,🤑,🤠,😈,👿,👹,👺,🤡,💩,👻,💀,☠️,👽,👾,🤖,🎃,❤️,🧡,💛,💚,💙,💜,🖤,🤍,🤎,❤️‍🔥,❤️‍🩹,💔,❣️,💕,💞,💓,💗,💖,💝,💘,💟,💢,💥,💫,💦,💨,🕳️,💣,💬,👁️‍🗨️,🗨️,🗯️,💭,💤,🔥,⭐,🌟,✨,⚡,🎉,🎊,💯,✅,❌,😹,😻,🙈,🙉,🙊,💋,👍,👎,👌,🤞,✌️,🤟,🤘,🤙,👋,🤚,🖐️,✋,🖖,👏,🫶,🙏,💪"
+      "value": "👑,💎,⭐,✨,🔥,💯,✅,🎉,🤖,⚡,💫,🌟,🏆,👾,🚀,💪,🎯,🔱,♾️,⚜️"
     },
     "ANTI_DEL_PATH": {
       "description": "Deleted message resend path - same or inbox",
