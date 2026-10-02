@@ -1,7 +1,7 @@
 /**
- * Firebox Bot — SaaS Server
+ * Redtech Ai — SaaS Server
  *
- * The original Firebox Bot browser session remains available for bot setup.
+ * The original Redtech Ai browser session remains available for bot setup.
  * The optional server registry uses a separate password-authenticated account
  * stored in the existing local application database directory.
  */
@@ -67,11 +67,7 @@ const PORT = process.env.PORT || 3000;
 
 if (process.env.NODE_ENV === "production") app.set("trust proxy", 1);
 
-app.use(express.json({
-    verify(req, _res, buffer) {
-        if (req.originalUrl.split("?")[0] === "/api/paystack/webhook") req.rawBody = Buffer.from(buffer);
-    },
-}));
+app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use(session({
@@ -89,24 +85,7 @@ app.use(session({
 // ── Static files ──────────────────────────────────────────────────────────────
 // Disable Express's automatic index.html fallback so `/` always opens the
 // public visitor-specific Server 1 bot workspace.
-app.get("/servers.html", (_req, res) => res.redirect("/token"));
 app.use(express.static(path.join(__dirname, "public"), { index: false }));
-
-// Paystack webhooks are authenticated against the exact raw request bytes.
-const paystackWebhookService = require("./saas/paystackPayments").createPaystackService({
-    tokenRegistry: require("./saas/tokenRegistry"),
-});
-app.post("/api/paystack/webhook", async (req, res) => {
-    try {
-        await paystackWebhookService.handleWebhook({
-            rawBody: req.rawBody,
-            signature: req.get("x-paystack-signature"),
-        });
-        return res.sendStatus(200);
-    } catch (error) {
-        return res.status(error.status || 500).json({ error: error.message || "Paystack webhook processing failed." });
-    }
-});
 
 // ── Bot API (/api/bot/*) ──────────────────────────────────────────────────────
 app.use("/api/auth", require("./saas/authApiRoutes"));
@@ -124,7 +103,6 @@ app.use("/api/admin/firebox-database", require("./saas/fireboxDatabaseApi").crea
 
 const serverWorkspace = path.join(__dirname, "public", "servers.html");
 const tokenWorkspace = path.join(__dirname, "public", "token.html");
-const paymentWorkspace = path.join(__dirname, "public", "payment.html");
 const codeWorkspace = path.join(__dirname, "public", "code.html");
 const adminWorkspace = path.join(__dirname, "public", "admin.html");
 const authWorkspace = path.join(__dirname, "public", "auth.html");
@@ -136,7 +114,6 @@ const settingsWorkspace = path.join(__dirname, "public", "settings.html");
 // share the same in-memory BotInstance.
 app.get("/", (_req, res) => res.redirect("/token"));
 app.get("/token", (_req, res) => res.sendFile(tokenWorkspace));
-app.get("/payment", (_req, res) => res.sendFile(paymentWorkspace));
 app.get("/code", (_req, res) => res.sendFile(codeWorkspace));
 app.get("/admin", (req, res) => { if (!isAdminAuthenticated(req)) return res.sendFile(adminAccessWorkspace); return res.sendFile(adminWorkspace); });
 app.get("/auth", (_req, res) => res.redirect("/"));
@@ -159,7 +136,8 @@ app.get("/health", (req, res) => res.send("🤖 Firebox Bot SaaS is Online!"));
 
 // ── Listen ────────────────────────────────────────────────────────────────────
 app.listen(PORT, () => {
-    console.log(`🌍 Firebox Bot SaaS listening on port ${PORT}`);
+    console.log(`🌍 Redtech Ai SaaS listening on port ${PORT}`);
     fireboxWebhook.start();
     botManager.restorePersisted().catch((error) => console.error("❌ Persistent bot restore failed:", error.message));
 });
+        
