@@ -54,7 +54,7 @@ module.exports = {
                 const list = categories[target];
                 
                 if (target === "economy") {
-                    let econText = `╭━━━━╼ *FIREBOX ECONOMY* ╾━━━━╮\n`;
+                    let econText = `╭━━━━╼ *𝐑𝐄𝐃𝐓𝐄𝐂𝐇 𝐀𝐈 ECONOMY* ╾━━━━╮\n`;
                     econText += `┃ _Manage your wealth & assets_\n┃\n`;
                     econText += `┃ 💳 *FINANCE*\n`;
                     econText += `┃ ┃ 💎 *.balance* - Check wallet\n`;
@@ -79,7 +79,7 @@ module.exports = {
                 }
 
                 if (target === "fun") {
-                    let funText = `╭━━━━╼ *FIREBOX FUN & GAMES* ╾━━━━╮\n`;
+                    let funText = `╭━━━━╼ *REDTECH FUN & GAMES* ╾━━━━╮\n`;
                     funText += `┃ _Bring excitement to the chats!_\n┃\n`;
                     funText += `┃ 🎭 *LAUGHTER & HUMOUR*\n`;
                     funText += `┃ ┃ 😂 *.joke* / 🖤 *.darkjoke* / 🖼️ *.meme*\n`;
@@ -175,7 +175,7 @@ module.exports = {
                     banner = { url: botImageUrl };
                 } else {
                     const newBotPic = path.join(__dirname, "../../assets/botfirebox.png");
-                    const legacyPic = path.join(__dirname, "../../assets/Fireboxpic.jpg");
+                    const legacyPic = path.join(__dirname, "../../assets/Redtechpic.jpg");
                     const bannerPath = fs.existsSync(newBotPic) ? newBotPic : legacyPic;
                     banner = fs.existsSync(bannerPath) ? fs.readFileSync(bannerPath) : null;
                 }
@@ -227,7 +227,7 @@ module.exports = {
             const prefix = (settings2.prefix || ".");
 
             let menuBody = `╔══════════════════════╗\n`;
-            menuBody += `║  🔥  *𝐅𝐈𝐑𝐄𝐁𝐎𝐗  𝐁𝐎𝐓*  🔥  ║\n`;
+            menuBody += `║  🔥  *𝐑𝐄𝐃𝐓𝐄𝐂𝐇  𝐀𝐈*  🧠  ║\n`;
             menuBody += `╚══════════════════════╝\n\n`;
             menuBody += `📌 ᴘʀᴇꜰɪx » ${prefix}   ⏱️ ᴜᴘᴛɪᴍᴇ » ${uptimeStr}\n`;
             menuBody += `🌐 ᴍᴏᴅᴇ   » *${mode}*\n`;
