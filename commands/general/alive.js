@@ -24,7 +24,7 @@ module.exports = {
         else greeting = "Good Evening 🌃";
 
         const settings = getSettings();
-        const botName = settings.botName || "Firebox Bot";
+        const botName = settings.botName || "Redtech Ai";
         const botImageUrl = settings.botImage;
 
         const text = `👋 *${greeting}!*\n\n` +
