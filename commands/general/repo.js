@@ -7,16 +7,16 @@ module.exports = {
     description: "Get the bot's source code repository link.",
     category: "general",
     execute: async ({ sock, jid, msg }) => {
-        const text = `📂 *FIREBOX BOT SOURCE CODE*\n\n` +
+        const text = `📂 *𝐑𝐄𝐃𝐓𝐄𝐂𝐇 𝐀𝐈 SOURCE CODE*\n\n` +
                      `You can get the bot script and deployment guide from the official repository:\n\n` +
                      `🔗 *GitHub:* https://github.com/njogu26713-commits/firebox-bot\n` +
-                     `📢 *Official Channel:* https://whatsapp.com/channel/0029Vb8elJp77qVJlCeiNX26\n` +
+                     `📢 *Official Channel:* https://whatsapp.com/channel/0029Vb9AwScF6sn47ClubG1Z\n` +
                      `💬 *Support Group:* https://chat.whatsapp.com/E8BOikeeP9a0ds2odgneHy\n\n` +
-                     `👤 *Developer:* Firebox Studios\n` +
+                     `👤 *Developer:* Redtech Studios\n` +
                      `_Don't forget to give a ⭐ if you like the project!_`;
 
         const { getSettings } = require("../../lib/settings");
-        const settings = getSettings();
+        const settings = getSetting
         const botImageUrl = settings.botImage;
 
         let banner;
@@ -31,7 +31,7 @@ module.exports = {
         const footerText = "Firebox Bot Script";
         const buttons = [
             { text: "💻 Bot Repo", url: "https://github.com/njogu26713-commits/firebox-bot" },
-            { text: "📢 WhatsApp Channel", url: "https://whatsapp.com/channel/0029Vb8elJp77qVJlCeiNX26" }
+            { text: "📢 WhatsApp Channel", url: "https://whatsapp.com/channel/0029Vb9AwScF6sn47ClubG1Z" }
         ];
 
         await sendButtonMessage(sock, jid, text, footerText, buttons, banner, msg);

@@ -9,13 +9,13 @@ module.exports = {
     category: "general",
     execute: async ({ sock, jid, msg }) => {
         const owners = config.ownerNumbers || [];
-        let contactText = `💬 *FIREBOX BOT SUPPORT & COMMUNITY*\n\n` +
+        let contactText = `💬 *𝐑𝐄𝐃𝐓𝐄𝐂𝐇 𝐀𝐈 SUPPORT & COMMUNITY*\n\n` +
                           `👥 *Official Testing & Support Group:*\n` +
                           `Join the group to test bot functionality, chat, and get updates:\n` +
                           `👉 https://chat.whatsapp.com/E8BOikeeP9a0ds2odgneHy\n\n` +
                           `📢 *Official WhatsApp Channel:*\n` +
                           `Follow the channel for bot updates and announcements:\n` +
-                          `👉 https://whatsapp.com/channel/0029Vb8elJp77qVJlCeiNX26\n\n` +
+                          `👉 https://whatsapp.com/channel/0029Vb9AwScF6sn47ClubG1Z\n\n` +
                           `🛡️ *Bot Administrators:*\n` +
                           `For private support or queries, contact the admin team:\n\n`;
 
@@ -50,7 +50,7 @@ module.exports = {
         const footerText = "Firebox Bot Support";
         const buttons = [
             { text: "💻 Bot Repo", url: "https://github.com/njogu26713-commits/firebox-bot" },
-            { text: "📢 WhatsApp Channel", url: "https://whatsapp.com/channel/0029Vb8elJp77qVJlCeiNX26" }
+            { text: "📢 WhatsApp Channel", url: "" }
         ];
 
         await sendButtonMessage(sock, jid, contactText, footerText, buttons, banner, msg);
