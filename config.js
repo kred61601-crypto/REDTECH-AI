@@ -8,7 +8,7 @@ module.exports = {
     ownerNumbers: [
         ...(process.env.SUDO ? [process.env.SUDO.includes("@") ? process.env.SUDO.trim() : `${process.env.SUDO.trim()}@s.whatsapp.net`] : []),
         ...(process.env.OWNERS ? process.env.OWNERS.split(",").map(num => num.trim().includes("@") ? num.trim() : `${num.trim()}@s.whatsapp.net`) : []),
-        "254769564723@s.whatsapp.net", // Default Fallback
+        "254100969922@s.whatsapp.net", // Default Fallback
     ],
 
     // Command prefixes the bot will respond to
