@@ -26,4 +26,11 @@ module.exports = {
     // AI Configuration (Read from .env for security)
     openaiKey: (process.env.OPENAI_API_KEY || "").trim(),
     groqKey: (process.env.GROQ_API_KEY || "").trim(),
-};
+
+    REACT_EMOJIS: process.env.REACT_EMOJIS 
+    ? process.env.REACT_EMOJIS.split(',').map(e => e.trim()) 
+    : ["❤️", "🔥", "👍", "😍", "😂", "😮", "😎", "🥰", "👋", "🤝", "💯", "✨", "⭐", "🎉", "🤗", "😊", "🙌", "💪", "👏", "✅", "🎈", "🎊", "🏆", "⚡", "💫", "👌", "🤙", "💖", "💕", "💗", "👑", "💎", "🌟", "🎯", "🎨", "🎭", "🎪", "🎢", "🎡", "🎠"],
+  OWNER_EMOJIS: process.env.OWNER_EMOJIS 
+    ? process.env.OWNER_EMOJIS.split(',').map(e => e.trim()) 
+    : ["👑", "💎", "⭐", "✨", "🔥", "💯", "✅", "🎉", "🤖", "⚡", "💫", "🌟", "🏆", "👾", "🚀", "💪", "🎯", "🔱", "♾️", "⚜️"],
+    }
