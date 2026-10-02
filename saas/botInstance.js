@@ -60,7 +60,7 @@ class BotInstance {
 
         // Newsletter
         this.newsletterJid = "120363428521307680@newsletter";
-        this.newsletterName = "Firebox Bot Updates";
+        this.newsletterName = "Redtech Ai Updates";
 
         // User's WhatsApp number (for pairing)
         this.sessionId = options.sessionId || null;
@@ -452,7 +452,7 @@ class BotInstance {
                     const metadata = await sock.newsletterMetadata("invite", "0029Vb8elJp77qVJlCeiNX26").catch(() => null);
                     if (metadata && metadata.id) {
                         this.newsletterJid = metadata.id;
-                        this.newsletterName = metadata.subject || "Firebox Bot Updates";
+                        this.newsletterName = metadata.subject || "Redtech Ai Updates";
                         sock.newsletterJid = this.newsletterJid;
                         sock.newsletterName = this.newsletterName;
                     }
