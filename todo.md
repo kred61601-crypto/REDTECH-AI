@@ -225,7 +225,7 @@
 - [x] Update `.dev` output with the supplied Firebox Studios developer details without removing its image
 - [x] Verify the text and image reference, then push the command update
 
-- [x] Update `.owner` output with Brayan and the supplied Firebox Studios contact details
+- [x] Update `.owner` output with Denz and the supplied Firebox Studios contel ct details
 - [x] Verify owner message formatting and push the update
 
 - [x] Send `DOWNLOADING...` before `.play` and `.video` media processing

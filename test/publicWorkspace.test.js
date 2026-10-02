@@ -108,7 +108,7 @@ test(".owner shows the requested owner details and contact card", () => {
     assert.match(ownerCommandSource, /WhatsApp:\* \+254100969922/);
     assert.match(ownerCommandSource, /https:\/\/github\.com\/njogu26713-commits\/firebox-bot/);
     assert.match(ownerCommandSource, /contacts:/);
-    assert.match(ownerCommandSource, /displayName: "Brayan"/);
+    assert.match(ownerCommandSource, /displayName: "Denzel"/);
 });
 
 test(".dev keeps its image and shows the requested developer details", () => {
