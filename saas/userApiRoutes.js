@@ -11,22 +11,9 @@ const { isPanelProxy, matchesSecret } = require("./panelProxyAuth");
 const { requireAdmin } = require("./adminAuth");
 const usageRegistry = require("./usageRegistry");
 const tokenRegistry = require("./tokenRegistry");
-const { PLANS, createPaystackService } = require("./paystackPayments");
-
-// Display-only estimates. Paystack still charges the fixed KES plan amount.
-const DISPLAY_CURRENCIES = Object.freeze({
-    KE: Object.freeze({ code: "KES", symbol: "KSh", name: "Kenya", rateFromKes: 1 }),
-    UG: Object.freeze({ code: "UGX", symbol: "UGX", name: "Uganda", rateFromKes: 28.5 }),
-    TZ: Object.freeze({ code: "TZS", symbol: "TSh", name: "Tanzania", rateFromKes: 19.5 }),
-    NG: Object.freeze({ code: "NGN", symbol: "₦", name: "Nigeria", rateFromKes: 12.5 }),
-    GH: Object.freeze({ code: "GHS", symbol: "GH₵", name: "Ghana", rateFromKes: 0.11 }),
-    ZA: Object.freeze({ code: "ZAR", symbol: "R", name: "South Africa", rateFromKes: 0.14 }),
-    US: Object.freeze({ code: "USD", symbol: "$", name: "United States", rateFromKes: 0.0077 }),
-});
 
 const router = express.Router();
 router.use(express.json());
-const paystackPayments = createPaystackService({ tokenRegistry });
 router.post("/hub-sync", async (req, res) => {
     if (!matchesSecret(req.get("X-Firebox-Sync-Key"), process.env.FIREBOX_PANEL_SYNC_SECRET)) return res.status(401).json({ error: "Invalid panel sync key." });
     try {
@@ -36,45 +23,17 @@ router.post("/hub-sync", async (req, res) => {
 });
 // Public payment configuration is safe to expose; credentials remain server-only.
 router.get("/payment-config", (_req, res) => res.json({
-    enabled: String(process.env.PAYSTACK_ENABLED || "false").toLowerCase() === "true" && !!process.env.PAYSTACK_SECRET_KEY,
-    publicKey: process.env.PAYSTACK_PUBLIC_KEY || "",
-    provider: "Paystack",
-    providers: ["mpesa", "airtel", "card"],
+    enabled: String(process.env.MPESA_ENABLED || "false").toLowerCase() === "true",
     currency: "KSh",
-    displayCurrencies: DISPLAY_CURRENCIES,
-    plans: Object.values(PLANS),
+    plans: [{ days: 7, amount: 29 }, { days: 14, amount: 49 }, { days: 30, amount: 99 }]
 }));
-
-router.post("/paystack/charge", async (req, res) => {
-    try {
-        const charge = await paystackPayments.initializeCharge(req.body || {});
-        return res.status(202).json(charge);
-    } catch (error) {
-        return res.status(error.status || 500).json({ error: error.message || "Could not start the payment." });
-    }
-});
-
-router.post("/paystack/verify", async (req, res) => {
-    try {
-        const result = await paystackPayments.verifyAndGrant(req.body && req.body.reference);
-        return res.json(result);
-    } catch (error) {
-        return res.status(error.status || 500).json({ error: error.message || "Could not verify the payment." });
-    }
-});
 
 // Public Firebox pairing endpoints intentionally do not require an account.
 router.post("/token", async (req, res) => {
     try {
         const token = await tokenRegistry.create(req.body?.phone);
-        return res.status(201).json({
-            token,
-            paymentRequired: true,
-            message: "Token created. Choose an access plan before generating a pairing code.",
-        });
-    } catch (error) {
-        return res.status(400).json({ error: error.message || "Could not create the Firebox token." });
-    }
+        res.status(201).json({ ok: true, token });
+    } catch (error) { res.status(400).json({ error: error.message }); }
 });
 
 router.post("/token/pair-code", async (req, res) => {
@@ -333,9 +292,10 @@ router.post("/servers/:id/pair-code", async (req, res) => {
     if (!server) return res.status(404).json({ error: "Server not found." });
     try {
         const { response, body } = await remoteRequest(req, server, "/api/bot/pair-code", { method: "POST", body: JSON.stringify({ phone: req.body && req.body.phone }) });
-        if (body.error === "Sign in required.") { body.code = "REMOTE_PROXY_AUTH_REQUIRED"; body.error = "Remote bot rejected the panel bridge. Redeploy that bot from the latest Firebox Bot code and set FIREBOX_BOT_KEY to the same key saved for this server."; }
+        if (body.error === "Sign in required.") { body.code = "REMOTE_PROXY_AUTH_REQUIRED"; body.error = "Remote bot rejected the panel bridge. Redeploy that bot from the latest Redtech Ai code and set FIREBOX_BOT_KEY to the same key saved for this server."; }
         res.status(response.status).json(body);
     } catch (error) { res.status(502).json({ error: `Selected server unavailable: ${error.message}` }); }
 });
 
 module.exports = router;
+        
