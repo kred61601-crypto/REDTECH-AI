@@ -21,7 +21,6 @@ const botInstanceSource = fs.readFileSync(path.join(__dirname, "../saas/botInsta
 test("the public entry point separates reusable token and pairing-code pages", () => {
     assert.match(indexSource, /app\.get\("\/", \(_req, res\) => res\.redirect\("\/token"\)\)/);
     assert.match(indexSource, /app\.get\("\/token", \(_req, res\) => res\.sendFile\(tokenWorkspace\)\)/);
-    assert.match(indexSource, /app\.get\("\/payment", \(_req, res\) => res\.sendFile\(paymentWorkspace\)\)/);
     assert.match(indexSource, /app\.get\("\/code", \(_req, res\) => res\.sendFile\(codeWorkspace\)\)/);
     assert.match(indexSource, /app\.use\("\/api\/auth", require\("\.\/saas\/authApiRoutes"\)\)/);
     assert.match(indexSource, /app\.get\("\/admin", \(req, res\) => \{ if \(!isAdminAuthenticated\(req\)\) return res\.sendFile\(adminAccessWorkspace\)/);
@@ -30,44 +29,32 @@ test("the public entry point separates reusable token and pairing-code pages", (
     assert.match(indexSource, /app\.get\("\/auth", \(_req, res\) => res\.redirect\("\/"\)\)/);
     assert.match(indexSource, /app\.get\("\/settings", \(_req, res\) => res\.redirect\("\/token"\)\)/);
     assert.match(indexSource, /app\.get\("\/login", \(_req, res\) => res\.redirect\("\/token"\)\)/);
-    assert.match(indexSource, /app\.get\("\/servers\.html", \(_req, res\) => res\.redirect\("\/token"\)\)/);
     const tokenSource = fs.readFileSync(path.join(__dirname, "../public/token.html"), "utf8");
-    const paymentSource = fs.readFileSync(path.join(__dirname, "../public/payment.html"), "utf8");
     const codeSource = fs.readFileSync(path.join(__dirname, "../public/code.html"), "utf8");
-    assert.match(tokenSource, /FIREBOX/);
-    assert.doesNotMatch(tokenSource, /\/api\/bot\/paystack\/charge|\/api\/bot\/paystack\/verify/);
-    assert.match(tokenSource, /id="phone"/);
-    assert.match(tokenSource, /GENERATE FREE TOKEN/);
-    assert.match(tokenSource, /COPY TOKEN/);
-    assert.match(tokenSource, /SUBSCRIBE &amp; UNLOCK PAIRING/);
-    assert.match(paymentSource, /\/api\/bot\/paystack\/charge/);
-    assert.match(paymentSource, /\/api\/bot\/paystack\/verify/);
-    assert.match(paymentSource, /VISA \/ MASTERCARD/);
-    assert.match(paymentSource, /Airtel Money/);
-    assert.match(paymentSource, /M-PESA/);
-    assert.match(paymentSource, /id="token"/);
-    assert.match(paymentSource, /CHECK PAYMENT STATUS/);
-    assert.match(paymentSource, /YOUR COUNTRY \/\/ DISPLAY CURRENCY/);
-    assert.match(paymentSource, /id="country"/);
-    assert.match(paymentSource, /data-kes="29"/);
-    assert.match(paymentSource, /Paystack will charge the fixed KES amount/);
-    assert.match(paymentSource, /data-country-method="ke"/);
-    assert.match(paymentSource, /data-country-method="international"/);
-    assert.match(paymentSource, /International visitors can pay with Visa\/Mastercard/);
-    assert.match(codeSource, /FIREBOX/);
+    assert.match(tokenSource, /REDTECH/);
+    assert.match(tokenSource, /\/api\/bot\/token/);
+    assert.match(tokenSource, /VALIDATING NUMBER/);
+    assert.match(tokenSource, /ENCRYPTING REGISTRATION/);
+    assert.match(tokenSource, /SECURING REDTECH IDENTITY/);
+    assert.match(tokenSource, /SYNCING PAIRING SERVICE/);
+    assert.match(tokenSource, /GENERATING YOUR TOKEN/);
+    assert.match(tokenSource, /async function typewrite/);
+    assert.match(tokenSource, /id="rotating-copy"/);
+    assert.match(tokenSource, /Generate once\. Store it safely\./);
+    assert.match(tokenSource, /Your Redtech token stays yours\./);
+    assert.match(tokenSource, /window\.matchMedia\("\(prefers-reduced-motion: reduce\)"\)/);
+    assert.doesNotMatch(tokenSource, /textContent=copyLines\[0\];return/);
+    assert.match(codeSource, /REDTECH/);
     assert.match(codeSource, /\/api\/bot\/token\/pair-code/);
     assert.match(codeSource, /FORGOT TOKEN\? CHAT ADMIN/);
-    assert.match(codeSource, /wa\.me\/254769564723/);
-    for (const source of [paymentSource]) {
-        assert.match(source, /KSh 29/);
-        assert.match(source, /KSh 49/);
-        assert.match(source, /KSh 99/);
+    assert.match(codeSource, /wa\.me\/254100969922/);
+    for (const source of [tokenSource, codeSource]) {
+        assert.match(source, /KSh 20/);
+        assert.match(source, /KSh 50/);
+        assert.match(source, /KSh 100/);
+        assert.match(source, /\/api\/bot\/payment-config/);
     }
-    assert.doesNotMatch(tokenSource, /PAYMENT METHOD|AIRTEL MONEY|VISA \/ MASTERCARD|paystack\/charge/);
-    assert.match(codeSource, /CHOOSE AN M-PESA PLAN TO UNLOCK PAIRING/);
-    assert.doesNotMatch(codeSource, /STK PUSH OFFLINE/);
     assert.doesNotMatch(tokenSource, /Continue to pairing|Create account|Sign in/);
-    assert.doesNotMatch(paymentSource, /Create account|Sign in/);
     assert.doesNotMatch(codeSource, /Continue to pairing|Create account|Sign in/);
     assert.doesNotMatch(workspaceSource, /dashboard\/auth\/me/);
     assert.match(workspaceSource, /id="logout"/);
@@ -81,10 +68,6 @@ test("the public entry point separates reusable token and pairing-code pages", (
     assert.match(adminSource, /Phone numbers are shown in full/);
     assert.doesNotMatch(adminSource, /Phone numbers are masked/);
     assert.match(adminSource, /data-copy-token/);
-    assert.match(adminSource, /data-delete-token/);
-    assert.match(adminSource, /DELETE/);
-    assert.match(adminSource, /planDays/);
-    assert.match(adminSource, /PAID ACCESS/);
     assert.doesNotMatch(adminSource, /Add bot server|Webhook hub URL|Public bot URL|Bot key|Registered bots|Tracked bot usage/);
     assert.match(adminSource, /wa\.me\/254769564723/);
     assert.match(adminAccessSource, /\/api\/auth\/admin-login/);
@@ -119,10 +102,10 @@ test("Railway bot authentication uses durable MongoDB state when configured", ()
 });
 
 test(".owner shows the requested owner details and contact card", () => {
-    assert.match(ownerCommandSource, /FIREBOX BOT OWNER/);
-    assert.match(ownerCommandSource, /Owner:\* Brayan/);
-    assert.match(ownerCommandSource, /Company:\* Firebox Studios/);
-    assert.match(ownerCommandSource, /WhatsApp:\* \+254769564723/);
+    assert.match(ownerCommandSource, /𝐑𝐄𝐃𝐓𝐄𝐂𝐇 𝐀𝐈 OWNER/);
+    assert.match(ownerCommandSource, /Owner:\* Denzel/);
+    assert.match(ownerCommandSource, /Company:\* Redtech Studios/);
+    assert.match(ownerCommandSource, /WhatsApp:\* \+254100969922/);
     assert.match(ownerCommandSource, /https:\/\/github\.com\/njogu26713-commits\/firebox-bot/);
     assert.match(ownerCommandSource, /contacts:/);
     assert.match(ownerCommandSource, /displayName: "Brayan"/);
@@ -130,8 +113,8 @@ test(".owner shows the requested owner details and contact card", () => {
 
 test(".dev keeps its image and shows the requested developer details", () => {
     assert.match(devCommandSource, /DEVELOPERS/);
-    assert.match(devCommandSource, /Firebox Studios, NjoguCommits/);
-    assert.match(devCommandSource, /254769564723/);
+    assert.match(devCommandSource, /Redtech Studios, NjoguCommits/);
+    assert.match(devCommandSource, /254100969922/);
     assert.match(devCommandSource, /github\.com\/njogu26713-commits\/firebox-bot/);
     assert.match(devCommandSource, /Version:\* v3\.1/);
     assert.match(devCommandSource, /sock\.sendMessage\(jid, \{ image: banner, caption: text \}/);
@@ -152,12 +135,8 @@ test("the bot API remains session-scoped for each visitor", () => {
     assert.match(routes, /return req\.session\.id/);
     assert.match(routes, /botManager\.instances\.get\(userId\(req\)\)/);
     assert.match(routes, /router\.get\("\/payment-config"/);
-    assert.match(routes, /PAYSTACK_ENABLED/);
-    assert.match(routes, /displayCurrencies: DISPLAY_CURRENCIES/);
-    assert.match(routes, /rateFromKes/);
+    assert.match(routes, /MPESA_ENABLED/);
     assert.match(routes, /router\.post\("\/token"/);
-    assert.match(routes, /status\(201\)\.json/);
-    assert.match(routes, /paymentRequired: true/);
     assert.match(routes, /router\.post\("\/token\/pair-code"/);
 });
 
@@ -170,3 +149,4 @@ test("interactive menu messages retain forwarded Firebox channel metadata", () =
     assert.match(utils, /const newsletterJid = sock\.newsletterJid \|\| global\.newsletterJid/);
     assert.match(utils, /forwardedNewsletterMessageInfo/);
 });
+        
