@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>REDTECH // Token</title>
+<title>𝐑𝐄𝐃𝐓𝐄𝐂𝐇-𝐀𝐈 // Token</title>
 <style>
-:root{--purple:#6c63ff;--purple2:#8e64e6;--bg:#08060f;--card:#151121cc;--line:rgba(108,99,255,.18);--text:#e9e7ff;--muted:#9a97b8}
+:root{--purple:#6c63ff;--purple2:#8e64e6;--bg:#08060f;--card:#151121cc;--line:rgba(108,99,255,.22);--text:#e9e7ff;--muted:#9a97b8}
 *{box-sizing:border-box}body{margin:0;color:var(--text);font:14px system-ui;background:var(--bg);
 background-image:radial-gradient(at 20% 20%, rgba(108,99,255,.45) 0%, transparent 50%),
 radial-gradient(at 90% 80%, rgba(142,100,230,.35) 0%, transparent 50%),
@@ -15,17 +15,26 @@ body::before{content:"";position:fixed;inset:0;background-image:linear-gradient(
 .top{display:flex;justify-content:space-between;align-items:center;padding:10px 4px}
 .brand{color:var(--purple);font-weight:900;letter-spacing:.14em;display:flex;gap:10px;align-items:center}
 .brand svg{width:24px;height:24px;filter:drop-shadow(0 0 10px var(--purple))}
-.nav{display:flex;gap:14px}.nav a{color:var(--muted);text-decoration:none;font-size:11px;letter-spacing:.1em}
+
+/* === FIXED NAV - NOW VISIBLE BUTTONS === */
+.nav{display:flex;gap:6px;background:rgba(108,99,255,.14);border:1px solid rgba(108,99,255,.30);border-radius:999px;padding:5px;backdrop-filter:blur(10px)}
+.nav a{color:#c4c1e6;text-decoration:none;font-size:11px;font-weight:800;letter-spacing:.08em;padding:9px 16px;border-radius:999px;transition:all.2s ease;border:1px solid transparent}
+.nav a:hover{color:white;background:rgba(108,99,255,.25)}
+.nav a.active{background:linear-gradient(90deg,var(--purple),var(--purple2));color:white;box-shadow:0 4px 18px rgba(108,99,255,.55);border-color:rgba(255,255,255,.15)}
+
 .tag{text-align:center;color:var(--purple);font-size:11px;letter-spacing:.25em;margin:14px 0 8px}
 h1{text-align:center;margin:0 0 10px;font:900 36px/1.05 system-ui;letter-spacing:-.03em}h1 span{color:var(--purple)}
 .intro{text-align:center;color:var(--muted);line-height:1.6;min-height:40px;max-width:340px;margin:0 auto 18px}
 .card{background:var(--card);backdrop-filter:blur(20px);border:1px solid var(--line);border-radius:28px;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.6), 0 0 0 1px rgba(108,99,255,.15) inset}
-.card-icon{width:76px;height:76px;margin:0 auto 18px;background:linear-gradient(180deg,var(--purple),var(--purple2));border-radius:50%;display:grid;place-items:center;font-size:36px;box-shadow:0 0 30px var(--purple)}
+
+/* === FIXED ICON - NOW WITH STRONG RING === */
+.card-icon{width:88px;height:88px;margin:6px auto 20px;background:linear-gradient(180deg,var(--purple),var(--purple2));border-radius:50%;display:grid;place-items:center;font-size:40px;position:relative;box-shadow:0 0 0 10px rgba(108,99,255,.18), 0 0 0 20px rgba(108,99,255,.08), 0 0 40px rgba(108,99,255,.7);animation:pulse 2.2s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 10px rgba(108,99,255,.18),0 0 0 20px rgba(108,99,255,.08),0 0 40px rgba(108,99,255,.7)}50%{box-shadow:0 0 0 14px rgba(108,99,255,.12),0 0 0 28px rgba(108,99,255,.04),0 0 55px rgba(108,99,255,.9)}100%{box-shadow:0 0 0 10px rgba(108,99,255,.18),0 0 0 20px rgba(108,99,255,.08),0 0 40px rgba(108,99,255,.7)}}
+
 .label{color:var(--purple);font-size:10px;letter-spacing:.18em;margin-bottom:10px;display:block}
 .input{display:flex;align-items:center;gap:8px;background:#0c0a14;border:1px solid var(--line);border-radius:14px;padding:12px 14px}
 .input b{color:var(--purple)}input{flex:1;border:0;outline:0;background:transparent;color:var(--text);font:inherit}
 #generate{width:100%;margin-top:14px;border:0;border-radius:14px;padding:15px;background:linear-gradient(90deg,var(--purple),var(--purple2));color:white;font-weight:900;letter-spacing:.08em;cursor:pointer;box-shadow:0 8px 24px rgba(108,99,255,.4)}
-#generate:disabled{opacity:.6}
 .result{margin-top:18px;padding:16px;border:1px dashed #ff7ac2;border-radius:16px;background:#1a1120}
 .token{display:block;margin-top:10px;color:#7cf7ff;font-size:22px;word-break:break-all}
 .copy{width:100%;margin-top:12px;border-radius:10px;border:1px solid #ff7ac2;background:transparent;color:#ff7ac2;padding:10px;cursor:pointer}
@@ -34,7 +43,6 @@ h1{text-align:center;margin:0 0 10px;font:900 36px/1.05 system-ui;letter-spacing
 .plan-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
 .plan{background:#0c0a14;border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center}
 .plan strong{color:white}.plan span{color:var(--muted);font-size:10px;display:block;margin-top:2px}.plan button{margin-top:8px;width:100%;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--muted);font-size:9px;padding:6px}
-/* NEW SECTIONS - FILLS THAT EMPTY SPACE */
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:18px 0}
 .stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;text-align:center;backdrop-filter:blur(10px)}
 .stat b{display:block;color:var(--purple);font-size:10px;letter-spacing:.1em}.stat strong{display:block;font-size:18px;margin-top:6px}
@@ -51,12 +59,10 @@ h1{text-align:center;margin:0 0 10px;font:900 36px/1.05 system-ui;letter-spacing
 </head>
 <body>
 <div class="wrap">
-<header class="top"><div class="brand"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>// REDTECH</div><nav class="nav"><a href="/token">TOKEN</a><a href="/code">PAIR CODE</a></nav></header>
-
+<header class="top"><div class="brand"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>// REDTECH</div><nav class="nav"><a href="/token" class="active">TOKEN</a><a href="/code">PAIR CODE</a></nav></header>
 <div class="tag">[ NODE 01 / IDENTITY ]</div>
 <h1>Claim your <span>Redtech token.</span></h1>
 <p class="intro" id="rotating-copy"></p>
-
 <section class="card">
 <div class="card-icon">⚡</div>
 <label class="label">PHONE // INTERNATIONAL FORMAT</label>
@@ -67,26 +73,22 @@ h1{text-align:center;margin:0 0 10px;font:900 36px/1.05 system-ui;letter-spacing
 <div class="plans"><div class="plans-head"><span>TOKEN ACCESS PLANS</span><span id="payment-state">CHECKING...</span></div>
 <div class="plan-grid"><div class="plan"><strong>KSh 29</strong><span>7 DAYS</span><button disabled>STK PUSH OFFLINE</button></div><div class="plan"><strong>KSh 49</strong><span>14 DAYS</span><button disabled>STK PUSH OFFLINE</button></div><div class="plan"><strong>KSh 99</strong><span>30 DAYS</span><button disabled>STK PUSH OFFLINE</button></div></div></div>
 </section>
-
 <div class="stats"><div class="stat"><b>ACTIVE NODES</b><strong>12.4K</strong></div><div class="stat"><b>UPTIME</b><strong>99.9%</strong></div><div class="stat"><b>PING</b><strong>14ms</strong></div></div>
-
 <div class="how"><h3>How it works</h3><p>Get started in 3 simple steps</p>
-<div class="step"><i>1</i><div><strong>Enter Phone</strong><span>Your WhatsApp number in international format</span></div></div>
-<div class="step"><i>2</i><div><strong>Generate Token</strong><span>One token, reusable forever</span></div></div>
-<div class="step"><i>3</i><div><strong>Claim & Pair</strong><span>Use token on Pair Code page to link bot</span></div></div>
+<div class="step"><i>1</i><div><strong>Enter Phone</strong><span>Your WhatsApp number</span></div></div>
+<div class="step"><i>2</i><div><strong>Generate Token</strong><span>One token, reusable</span></div></div>
+<div class="step"><i>3</i><div><strong>Claim & Pair</strong><span>Use token on Pair Code page</span></div></div>
 </div>
-
 <div class="footer">
-<svg viewBox="0 0 24 24" fill="#25D366"><path d="M12 0C5.37 0 0 5.37 0 12c0 2.11.55 4.11 1.6 5.85L0 24l6.3-1.65A11.9 11.9 0 0012 24c6.63 0 12-5.37 12-12S18.63 0 12 0zm0 21.5a9.5 9.5 0 01-4.85-1.32l-.35-.2-3.74.98.99-3.65-.23-.38A9.47 9.47 0 012.5 12C2.5 6.76 6.76 2.5 12 2.5S21.5 6.76 21.5 12 17.24 21.5 12 21.5zm5.5-7.16c-.3-.15-1.77-.87-2.04-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.95 1.17-.17.2-.35.22-.65.07-.3-.15-1.26-.46-2.4-1.47-.89-.79-1.49-1.77-1.66-2.07-.17-.3-.02-.46.13-.61.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.08-.15-.67-1.62-.92-2.22-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.48s1.06 2.88 1.21 3.08c.15.2 2.09 3.19 5.06 4.48.71.3 1.26.49 1.69.62.71.22 1.36.19 1.87.12.57-.08 1.77-.72 2.02-1.42.25-.7.25-1.3.17-1.42-.07-.12-.27-.2-.57-.35z"/></svg>
+<svg viewBox="0 0 24 24" fill="#25D366"><path d="M12 0C5.37 0 0 5.37 0 12c0 2.11.55 4.11 1.6 5.85L0 24l6.3-1.65A11.9 11.9 0 0012 24c6.63 0 12-5.37 12-12S18.63 0 12 0z"/></svg>
 <div><div>Join our Community</div><a href="https://whatsapp.com/channel/0029Vb9AwScF6sn47ClubG1Z" target="_blank">WhatsApp Channel →</a></div>
 </div>
 <div class="copyright">© 2026 Redtech AI. All rights reserved.</div>
 </div>
 <div id="toast" class="toast"></div>
 <script>
-// YOUR SAME JS LOGIC - untouched
 const $=s=>document.querySelector(s);
-const copyLines=["Generate once. Store it safely. Use the same token whenever you need a new WhatsApp pairing code.","Your Redtech token stays yours. Keep it private and reuse it whenever you need a fresh code."];
+const copyLines=["Generate once. Store it safely. Use the same token whenever you need a new WhatsApp pairing code.","Your Redtech token stays yours."];
 (async()=>{const t=$("#rotating-copy");for(let i=0;;i=(i+1)%copyLines.length){const l=copyLines[i];for(let j=0;j<=l.length;j++){t.textContent=l.slice(0,j);await new Promise(r=>setTimeout(r,35))}await new Promise(r=>setTimeout(r,2500));for(let j=l.length;j>=0;j--){t.textContent=l.slice(0,j);await new Promise(r=>setTimeout(r,18))}}})();
 function toast(m){$("#toast").textContent=m;$("#toast").classList.add("show");setTimeout(()=>$("#toast").classList.remove("show"),3000)}
 async function api(u,o){const r=await fetch(u,{headers:{"Content-Type":"application/json"},...o});const d=await r.json().catch(()=>({}));if(!r.ok)throw Error(d.error||"Request failed");return d}
