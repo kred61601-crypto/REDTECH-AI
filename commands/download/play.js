@@ -1,5 +1,5 @@
 // commands/download/play.js
-// RED TECH AI - YouTube MP3 Downloader
+// RED TECH AI - Audio Downloader
 
 const axios = require("axios");
 const yts = require("yt-search");
@@ -7,14 +7,26 @@ const yts = require("yt-search");
 module.exports = {
   name: "play",
   aliases: ["ply", "playy", "pl"],
-  description: "Search and download a song as MP3",
+  description: "Search and download songs from YouTube",
   category: "download",
 
   execute: async (context) => {
     const { sock, jid, msg, text } = context;
 
     const reply = async (message) => {
-      await sock.sendMessage(jid, { text: message }, { quoted: msg });
+      return sock.sendMessage(
+        jid,
+        { text: message },
+        { quoted: msg }
+      );
+    };
+
+    const react = async (emoji) => {
+      try {
+        await sock.sendMessage(jid, {
+          react: { text: emoji, key: msg.key }
+        });
+      } catch {}
     };
 
     try {
@@ -22,75 +34,124 @@ module.exports = {
 
       if (!query) {
         return reply(
-          "🎵 *RED TECH AI — PLAY*\n\n" +
-          "Usage:.play song name\n" +
-          "Example:.play Calm Down"
+          "🎧 *RED TECH AI — AUDIO DOWNLOADER*\n\n" +
+          "Use: .play song name\n" +
+          "Example: .play Nawaza by Diamond Platnumz\n\n" +
+          "You can also send a YouTube link."
         );
       }
 
+      await react("⏳");
+
+      // Search for the song
+      const search = await yts(query);
+      const video = search.videos?.[0];
+
+      if (!video) {
+        await react("❌");
+        return reply("❌ No song found. Try another song title.");
+      }
+
+      const title = video.title || "Unknown Song";
+      const artist = video.author?.name || "Unknown Artist";
+      const duration = video.timestamp || "Unknown";
+      const views = Number(video.views || 0).toLocaleString();
+      const videoUrl = video.url;
+      const thumbnail = video.thumbnail;
+
+      // Send the information card while downloading
+      const caption =
+        "• *AUDIO DOWNLOADER* 🎧\n" +
+        "┏━━━⪼\n" +
+        `┃ 🎵 *Title* - ${title}\n` +
+        `┃ ⏱️ *Duration* - ${duration}\n` +
+        `┃ 👁️ *Views* - ${views}\n` +
+        `┃ 👤 *Author* - ${artist}\n` +
+        "┃ 📥 *Status* - Downloading...\n" +
+        "┗━━━⪼\n\n" +
+        "Powered by *RED TECH AI* 👑";
+
+      try {
+        await sock.sendMessage(
+          jid,
+          {
+            image: { url: thumbnail },
+            caption
+          },
+          { quoted: msg }
+        );
+      } catch {
+        await reply(caption);
+      }
+
+      // Request the audio download from the API
+      const api =
+        "https://apiziaul.vercel.app/api/downloader/ytplaymp3?query=" +
+        encodeURIComponent(videoUrl);
+
+      const response = await axios.get(api, {
+        timeout: 60000,
+        headers: { Accept: "application/json" }
+      });
+
+      const data = response.data;
+
+      const audioUrl =
+        data?.result?.downloadUrl ||
+        data?.result?.url ||
+        data?.downloadUrl ||
+        data?.url ||
+        data?.result?.download?.url;
+
+      if (!data?.status || !audioUrl) {
+        await react("❌");
+        return reply(
+          "❌ *RED TECH AI*\n\n" +
+          "The song was found, but the audio service did not provide a download link. Try again later."
+        );
+      }
+
+      // Download the audio
+      const audioResponse = await axios.get(audioUrl, {
+        responseType: "arraybuffer",
+        timeout: 120000,
+        maxContentLength: 25 * 1024 * 1024,
+        maxBodyLength: 25 * 1024 * 1024
+      });
+
+      const audio = Buffer.from(audioResponse.data);
+
+      if (!audio.length) {
+        throw new Error("Audio download returned an empty file.");
+      }
+
+      const safeTitle = title
+        .replace(/[<>:"/\\|?*\x00-\x1F]/g, "_")
+        .slice(0, 100);
+
       await sock.sendMessage(
         jid,
-        { react: { text: "💽", key: msg.key } }
+        {
+          audio,
+          mimetype: "audio/mpeg",
+          fileName: `${safeTitle}.mp3`
+        },
+        { quoted: msg }
       );
 
-      // Search YouTube
-      const search = await yts(query);
-      const video = search.videos && search.videos[0];
+      await react("✅");
 
-      if (!video ||!video.url) {
-        await sock.sendMessage(jid, { react: { text: "❌", key: msg.key } });
-        return reply("❌ No results found for: " + query);
-      }
+    } catch (error) {
+      console.error(
+        "[RED TECH AI PLAY ERROR]",
+        error.response?.data || error.message || error
+      );
 
-      // ===== ADDED PART - PICTURE LIKE YOU ASKED =====
-      const caption =
-`. AUDIO DOWNLOADER 🎧
-
-    ┌───⪩⪨
-    │⊙ Title - ${video.title}
-    │⊙ Duration - ${video.timestamp}
-    │⊙ Views - ${video.views.toLocaleString()}
-    │⊙ Author - ${video.author.name}
-    │⊙ Status - Downloading...
-    └───⪩⪨`;
-
-      await sock.sendMessage(jid, {
-        image: { url: video.thumbnail },
-        caption: caption
-      }, { quoted: msg });
-      // ===== END OF ADDED PART =====
-
-      // Your original download logic continues from here
-      const apiUrl = `https://api.davidcyriltech.my.id/youtube/mp3?url=${encodeURIComponent(video.url)}`;
-
-      let audioUrl;
-      try {
-        const res = await axios.get(apiUrl);
-        audioUrl = res.data?.result?.downloadUrl || res.data?.result?.download || res.data?.url;
-      } catch (e) {
-        console.log("API error:", e.message);
-      }
-
-      if (!audioUrl) {
-        await sock.sendMessage(jid, { react: { text: "❌", key: msg.key } });
-        return reply("❌ Failed to download. Try again later");
-      }
-
-      const audioBuffer = await axios.get(audioUrl, { responseType: "arraybuffer" }).then(r => r.data);
-
-      await sock.sendMessage(jid, {
-        audio: Buffer.from(audioBuffer),
-        mimetype: "audio/mpeg",
-        fileName: `${video.title}.mp3`,
-        ptt: false
-      }, { quoted: msg });
-
-      await sock.sendMessage(jid, { react: { text: "✅", key: msg.key } });
-
-    } catch (err) {
-      console.error("PLAY ERROR:", err);
-      await sock.sendMessage(jid, { react: { text: "❌", key: msg.key } });
-      await sock.sendMessage(jid, { text: `❌ Error: ${err.message}` }, { quoted: msg });
+      await react("❌");
+      await reply(
+        "❌ *RED TECH AI*\n\n" +
+        "Sorry, the song could not be downloaded. The download service may be unavailable. Please try again."
+      ).catch(() => {});
     }
-  },
+  }
 };
