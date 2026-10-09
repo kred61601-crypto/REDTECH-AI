@@ -1,87 +1,340 @@
 import { sendInteractive } from '../../lib/sendInteractive.js';
+
+const BOT_NAME = 'RED TECH AI';
+const TIMEOUT_MS = 25000;
+
+async function fetchJson(url) {
+  const response = await fetch(url, {
+    headers: {
+      Accept: 'application/json',
+      'User-Agent': 'RED-TECH-AI/1.0'
+    },
+    signal: AbortSignal.timeout(TIMEOUT_MS)
+  });
+
+  const body = await response.text();
+
+  if (!response.ok) {
+    throw new Error(`Downloader HTTP ${response.status}: ${body.slice(0, 200)}`);
+  }
+
+  try {
+    return JSON.parse(body);
+  } catch {
+    throw new Error(`Downloader returned invalid JSON: ${body.slice(0, 200)}`);
+  }
+}
+
+function getYouTubeUrl(query) {
+  try {
+    const url = new URL(
+      /^https?:\/\//i.test(query) ? query : `https://${query}`
+    );
+
+    const host = url.hostname.toLowerCase();
+    let videoId = '';
+
+    if (host === 'youtu.be') {
+      videoId = url.pathname.split('/').filter(Boolean)[0] || '';
+    } else if (
+      host === 'youtube.com' ||
+      host.endsWith('.youtube.com')
+    ) {
+      videoId =
+        url.searchParams.get('v') ||
+        url.pathname.match(
+          /^\/(?:shorts|embed|live|v)\/([a-zA-Z0-9_-]{11})/
+        )?.[1] ||
+        '';
+    } else {
+      return null;
+    }
+
+    if (!/^[a-zA-Z0-9_-]{11}$/.test(videoId)) {
+      return null;
+    }
+
+    return `https://www.youtube.com/watch?v=${videoId}`;
+  } catch {
+    return null;
+  }
+}
+
+function extractSong(data) {
+  const candidates = [
+    data?.result,
+    data?.data,
+    data?.result?.data,
+    data?.result?.result,
+    data
+  ].filter(Boolean);
+
+  for (const item of candidates) {
+    const downloadUrl =
+      item.downloadUrl ||
+      item.download_url ||
+      item.url ||
+      item.audio ||
+      item.cdn ||
+      item.link;
+
+    if (
+      typeof downloadUrl === 'string' &&
+      /^https?:\/\//i.test(downloadUrl)
+    ) {
+      return {
+        url: downloadUrl,
+        title:
+          item.title ||
+          item.name ||
+          item.filename ||
+          'Unknown Song',
+        thumbnail:
+          item.thumbnail ||
+          item.image ||
+          item.thumb ||
+          '',
+        videoUrl:
+          item.videoUrl ||
+          item.video_url ||
+          item.source ||
+          ''
+      };
+    }
+  }
+
+  return null;
+}
+
+function safeFilename(name) {
+  return name
+    .replace(/[<>:"/\\|?*\x00-\x1F]/g, '_')
+    .replace(/\.mp3$/i, '')
+    .trim()
+    .slice(0, 150) || 'song';
+}
+
 export default {
   name: 'play',
   aliases: ['ply', 'playy', 'pl'],
-  description: 'Downloads songs from YouTube and sends audio',
+  description: 'Searches and downloads songs as audio',
+
   run: async (context) => {
     const { client, m, text } = context;
-        await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
+    const reactKey = m.reactKey || m.key;
+
+    const react = async (emoji) => {
+      if (!reactKey) return;
+      await client.sendMessage(m.chat, {
+        react: { text: emoji, key: reactKey }
+      }).catch(() => {});
+    };
 
     try {
-      const query = text ? text.trim() : '';
+      const query = typeof text === 'string' ? text.trim() : '';
 
       if (!query) {
-        await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
-        return sendInteractive(client, m, `⚡ ──「 PLAY 」──\n▢ You forgot to type something, genius.\n▢ Give me a song name OR a YouTube link.\n▢ Example: .play harlem shake\n▢ Or: .play https://youtu.be/dQw4w9WgXcQ\n└──✦ 𝐁𝐋𝐀𝐂𝐊 𝐏𝐀𝐍𝐓𝐇𝐄𝐑 ┃ ᴹᴰ ✦──`);
+        await react('❌');
+        return sendInteractive(
+          client,
+          m,
+          `🎵 ──「 ${BOT_NAME} PLAY 」──
+▢ Enter a song name or YouTube video link.
+▢ Example: .play Shape of You
+▢ Example: .play https://youtu.be/VIDEO_ID
+└──👑 ${BOT_NAME}`
+        );
       }
 
-      await client.sendMessage(m.chat, { react: { text: '⌛', key: m.reactKey } });
+      if (query.length > 200) {
+        await react('❌');
+        return sendInteractive(
+          client,
+          m,
+          `Search query is too long. Keep it under 200 characters.\n👑 ${BOT_NAME}`
+        );
+      }
 
-      const isYoutubeLink = /(?:https?:\/\/)?(?:youtu\.be\/|(?:www\.|m\.)?youtube\.com\/(?:watch\?v=|v\/|embed\/|shorts\/|playlist\?list=)?[a-zA-Z0-9_-]{11})/gi.test(query);
+      await react('⌛');
 
-      let audioUrl, filename, thumbnail, sourceUrl;
+      const youtubeUrl = getYouTubeUrl(query);
+      let song;
 
-      if (isYoutubeLink) {
-        const response = await fetch(`https://api.sidycoders.xyz/api/ytdl?url=${encodeURIComponent(query)}&format=mp3&apikey=memberdycoders`);
-        const data = await response.json();
+      if (youtubeUrl) {
+        // Try the existing direct-YouTube downloader first.
+        const endpoint =
+          'https://api.sidycoders.xyz/api/ytdl' +
+          `?url=${encodeURIComponent(youtubeUrl)}` +
+          '&format=mp3&apikey=memberdycoders';
 
-        if (!data.status || !data.cdn) {
-          await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
-          return sendInteractive(client, m, `▢ Can't download that YouTube link.\n▢ Your link is probably broken or private.\n▢ Even I have limits, unlike your stupidity.\n└──✦ 𝐑𝐄𝐃𝐓𝐄𝐂𝐇-𝐀𝐈 ┃ ᴹᴰ ✦──`);
+        try {
+          const data = await fetchJson(endpoint);
+          song = extractSong(data);
+
+          if (!song) {
+            console.error(
+              '[RED TECH AI] YouTube API response:',
+              JSON.stringify(data).slice(0, 1500)
+            );
+          }
+        } catch (error) {
+          console.error('[RED TECH AI] YouTube API error:', error.message);
         }
 
-        audioUrl = data.cdn;
-        filename = data.title || "Unknown YouTube Song";
-        thumbnail = "";
-        sourceUrl = query;
+        if (song) {
+          song.videoUrl = song.videoUrl || youtubeUrl;
+        }
       } else {
-        if (query.length > 100) {
-          await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } }).catch(() => {});
-          return sendInteractive(client, m, "▢ Song title longer than my patience. 100 chars MAX!\n└──𝐑𝐄𝐃𝐓𝐄𝐂𝐇-𝐀𝐈 ┃ ᴹᴰ ✦──");
+        // Search for the song by title.
+        let data;
+
+        try {
+          const endpoint =
+            'https://apiziaul.vercel.app/api/downloader/ytplaymp3' +
+            `?query=${encodeURIComponent(query)}`;
+
+          data = await fetchJson(endpoint);
+          song = extractSong(data);
+
+          if (!song) {
+            console.error(
+              '[RED TECH AI] Search API response:',
+              JSON.stringify(data).slice(0, 1500)
+            );
+          }
+        } catch (error) {
+          console.error('[RED TECH AI] Search API error:', error.message);
         }
 
-        const response = await fetch(`https://apiziaul.vercel.app/api/downloader/ytplaymp3?query=${encodeURIComponent(query)}`);
-        const data = await response.json();
-
-        if (!data.status || !data.result?.downloadUrl) {
-          await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
-          return sendInteractive(client, m, `▢ No song found for "${query}".\n▢ Your music taste is as bad as your search skills.\n└──✦𝐑𝐄𝐃𝐓𝐄𝐂𝐇-𝐀𝐈 ┃ ᴹᴰ ✦──`);
+        // A failed search API is not a successful "no results" response.
+        if (!song) {
+          await react('❌');
+          return sendInteractive(
+            client,
+            m,
+            `⚠️ ──「 SEARCH FAILED 」──
+▢ The song search service failed or returned an unsupported response.
+▢ Check your Render logs for [RED TECH AI] Search API.
+▢ Try again later or use a YouTube video link.
+└──👑 ${BOT_NAME}`
+          );
         }
-
-        audioUrl = data.result.downloadUrl;
-        filename = data.result.title || "Unknown Song";
-        thumbnail = data.result.thumbnail || "";
-        sourceUrl = data.result.videoUrl || "";
       }
 
-      await client.sendMessage(m.chat, { react: { text: '✅', key: m.reactKey } });
+      if (!song) {
+        await react('❌');
+        return sendInteractive(
+          client,
+          m,
+          `⚠️ ──「 DOWNLOAD FAILED 」──
+▢ No usable download link was returned.
+▢ The downloader may be offline or its API response may have changed.
+▢ Check the Render logs for [RED TECH AI].
+└──👑 ${BOT_NAME}`
+        );
+      }
+
+      // Verify that the download URL is reachable before sending it.
+      let audioResponse;
+
+      try {
+        audioResponse = await fetch(song.url, {
+          headers: { 'User-Agent': 'RED-TECH-AI/1.0' },
+          signal: AbortSignal.timeout(TIMEOUT_MS)
+        });
+      } catch (error) {
+        throw new Error(`Audio URL could not be fetched: ${error.message}`);
+      }
+
+      if (!audioResponse.ok) {
+        await audioResponse.body?.cancel().catch(() => {});
+        throw new Error(`Audio download returned HTTP ${audioResponse.status}`);
+      }
+
+      const contentType = (
+        audioResponse.headers.get('content-type') || ''
+      ).toLowerCase();
+
+      if (
+        contentType.includes('text/html') ||
+        contentType.includes('application/json')
+      ) {
+        await audioResponse.body?.cancel().catch(() => {});
+        throw new Error(
+          `Download URL returned ${contentType}, not audio`
+        );
+      }
+
+      const contentLength = Number(
+        audioResponse.headers.get('content-length') || 0
+      );
+
+      if (contentLength > 25 * 1024 * 1024) {
+        await audioResponse.body?.cancel().catch(() => {});
+        throw new Error('Audio file exceeds the 25 MB safety limit');
+      }
+
+      // Buffer the audio so Baileys does not have to fetch an
+      // expiring or inaccessible external URL a second time.
+      const chunks = [];
+      let totalBytes = 0;
+
+      for await (const chunk of audioResponse.body) {
+        totalBytes += chunk.length;
+
+        if (totalBytes > 25 * 1024 * 1024) {
+          throw new Error('Audio file exceeds the 25 MB safety limit');
+        }
+
+        chunks.push(Buffer.from(chunk));
+      }
+
+      const audioBuffer = Buffer.concat(chunks);
+
+      if (!audioBuffer.length) {
+        throw new Error('Downloader returned an empty audio file');
+      }
+
+      const filename = safeFilename(song.title);
+      const thumbnail = song.thumbnail;
 
       await client.sendMessage(m.chat, {
-        audio: { url: audioUrl },
-        mimetype: "audio/mpeg",
+        audio: audioBuffer,
+        mimetype: contentType.includes('ogg')
+          ? 'audio/ogg'
+          : contentType.includes('mp4')
+            ? 'audio/mp4'
+            : 'audio/mpeg',
         fileName: `${filename}.mp3`,
-        contextInfo: thumbnail ? {
-          externalAdReply: {
-            title: filename.substring(0, 30),
-            body: "BLACK-PANTHER-MD",
-            thumbnailUrl: thumbnail,
-            sourceUrl: sourceUrl,
-            mediaType: 1,
-            renderLargerThumbnail: true } } : undefined });
-
-      await client.sendMessage(m.chat, {
-        document: { url: audioUrl },
-        mimetype: "audio/mpeg",
-        fileName: `${filename.replace(/[<>:"/\\|?*]/g, '_')}.mp3`,
-        caption: `⚡ ──「 PLAY 」──
-▢ ${filename}\n└──✦ 𝐑𝐄𝐃𝐓𝐄𝐂𝐇-𝐀𝐈 ┃ ᴹᴰ ✦──`
+        contextInfo: thumbnail
+          ? {
+              externalAdReply: {
+                title: filename.slice(0, 60),
+                body: BOT_NAME,
+                thumbnailUrl: thumbnail,
+                sourceUrl: song.videoUrl || song.url,
+                mediaType: 1,
+                renderLargerThumbnail: true
+              }
+            }
+          : undefined
       });
 
+      await react('✅');
     } catch (error) {
-      console.error('Play error:', error);
-      await client.sendMessage(m.chat, { react: { text: '❌', key: m.reactKey } });
-      await sendInteractive(client, m, `⚡ ──「 PLAY ERROR 」──
-▢ Play failed. The universe rejects your music taste.\n└──✦ 𝐑𝐄𝐃𝐓𝐄𝐂𝐇-𝐀𝐈 ┃ ᴹᴰ ✦──`);
+      console.error('[RED TECH AI] Play error:', error);
+
+      await react('❌');
+
+      await sendInteractive(
+        client,
+        m,
+        `⚠️ ──「 PLAY ERROR 」──
+▢ The song could not be downloaded or sent.
+▢ Reason: ${String(error.message || 'Unknown error').slice(0, 180)}
+▢ Check the Render logs for details.
+└──👑 ${BOT_NAME}`
+      );
     }
   }
 };
