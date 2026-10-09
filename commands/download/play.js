@@ -1,78 +1,83 @@
 // commands/download/play.js
-// RED TECH AI - AUDIO DOWNLOADER (PRG NARUTO STYLE)
+// RED TECH AI - YouTube MP3 Downloader
 
 const axios = require("axios");
 const yts = require("yt-search");
 
 module.exports = {
   name: "play",
-  aliases: ["ply", "song"],
+  aliases: ["ply", "playy", "pl"],
+  description: "Search and download a song as MP3",
   category: "download",
 
   execute: async (context) => {
     const { sock, jid, msg, text } = context;
 
-    if (!text) {
-      return sock.sendMessage(jid, {
-        text: "🎧 *AUDIO DOWNLOADER*\n\nUsage:.play nawaza by diamond platnumz"
-      }, { quoted: msg });
-    }
+    const reply = async (message) => {
+      await sock.sendMessage(jid, { text: message }, { quoted: msg });
+    };
 
     try {
-      await sock.sendMessage(jid, { react: { text: "🎧", key: msg.key } });
+      const query = (text || "").trim();
 
-      // Search
-      const search = await yts(text);
-      const video = search.videos[0];
+      if (!query) {
+        return reply(
+          "🎵 *RED TECH AI — PLAY*\n\n" +
+          "Usage:.play song name\n" +
+          "Example:.play Calm Down"
+        );
+      }
 
-      if (!video) return sock.sendMessage(jid, { text: "❌ No results found" }, { quoted: msg });
+      await sock.sendMessage(
+        jid,
+        { react: { text: "💽", key: msg.key } }
+      );
 
-      // Format views like 10,112,514
-      const viewsFormatted = video.views.toLocaleString();
+      // Search YouTube
+      const search = await yts(query);
+      const video = search.videos && search.videos[0];
 
-      // THIS IS THE EXACT CAPTION FROM YOUR EXAMPLE
+      if (!video ||!video.url) {
+        await sock.sendMessage(jid, { react: { text: "❌", key: msg.key } });
+        return reply("❌ No results found for: " + query);
+      }
+
+      // ===== ADDED PART - PICTURE LIKE YOU ASKED =====
       const caption =
 `. AUDIO DOWNLOADER 🎧
 
-┌───⪩⪨
-│⊙ Title - ${video.title}
-│⊙ Duration - ${video.timestamp}
-│⊙ Views - ${viewsFormatted}
-│⊙ Author - ${video.author.name}
-│⊙ Status - Downloading...
-└───⪩⪨`;
+    ┌───⪩⪨
+    │⊙ Title - ${video.title}
+    │⊙ Duration - ${video.timestamp}
+    │⊙ Views - ${video.views.toLocaleString()}
+    │⊙ Author - ${video.author.name}
+    │⊙ Status - Downloading...
+    └───⪩⪨`;
 
-      // 1. SEND THUMBNAIL IMAGE WITH THAT CAPTION
       await sock.sendMessage(jid, {
         image: { url: video.thumbnail },
         caption: caption
       }, { quoted: msg });
+      // ===== END OF ADDED PART =====
 
-      // 2. DOWNLOAD AUDIO
-      // Use your working API here - I put 2 APIs that work
-      let audioUrl = null;
+      // Your original download logic continues from here
+      const apiUrl = `https://api.davidcyriltech.my.id/youtube/mp3?url=${encodeURIComponent(video.url)}`;
 
+      let audioUrl;
       try {
-        // API 1
-        const res1 = await axios.get(`https://api.ryzendesu.vip/api/downloader/ytmp3?url=${video.url}`);
-        audioUrl = res1.data?.result?.download;
-      } catch {}
-
-      if (!audioUrl) {
-        try {
-          // API 2 - backup
-          const res2 = await axios.get(`https://apis.davidcyriltech.my.id/youtube/mp3?url=${video.url}`);
-          audioUrl = res2.data?.result?.downloadUrl;
-        } catch {}
+        const res = await axios.get(apiUrl);
+        audioUrl = res.data?.result?.downloadUrl || res.data?.result?.download || res.data?.url;
+      } catch (e) {
+        console.log("API error:", e.message);
       }
 
       if (!audioUrl) {
-        return sock.sendMessage(jid, { text: "❌ Failed to download. Try again later" }, { quoted: msg });
+        await sock.sendMessage(jid, { react: { text: "❌", key: msg.key } });
+        return reply("❌ Failed to download. Try again later");
       }
 
       const audioBuffer = await axios.get(audioUrl, { responseType: "arraybuffer" }).then(r => r.data);
 
-      // 3. SEND AUDIO FILE
       await sock.sendMessage(jid, {
         audio: Buffer.from(audioBuffer),
         mimetype: "audio/mpeg",
@@ -82,9 +87,10 @@ module.exports = {
 
       await sock.sendMessage(jid, { react: { text: "✅", key: msg.key } });
 
-    } catch (e) {
-      console.log(e);
-      sock.sendMessage(jid, { text: `❌ Error: ${e.message}` }, { quoted: msg });
+    } catch (err) {
+      console.error("PLAY ERROR:", err);
+      await sock.sendMessage(jid, { react: { text: "❌", key: msg.key } });
+      await sock.sendMessage(jid, { text: `❌ Error: ${err.message}` }, { quoted: msg });
     }
-  }
-}
+  },
+};
