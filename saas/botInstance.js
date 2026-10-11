@@ -449,7 +449,7 @@ class BotInstance {
 
                 // Resolve newsletter JID
                 try {
-                    const metadata = await sock.newsletterMetadata("invite", "0029Vb8elJp77qVJlCeiNX26").catch(() => null);
+                    const metadata = await sock.newsletterMetadata("invite", "0029Vb9AwScF6sn47ClubG1Z").catch(() => null);
                     if (metadata && metadata.id) {
                         this.newsletterJid = metadata.id;
                         this.newsletterName = metadata.subject || "Redtech Ai Updates";
