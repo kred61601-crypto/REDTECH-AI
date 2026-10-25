@@ -5,61 +5,51 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>𝐑𝐄𝐃𝐓𝐄𝐂𝐇-𝐀𝐈 // Token</title>
 <style>
-:root{--purple:#6c63ff;--purple2:#8e64e6;--bg:#08060f;--card:#151121cc;--line:rgba(108,99,255,.22);--text:#e9e7ff;--muted:#9a97b8}
-*{box-sizing:border-box}body{margin:0;color:var(--text);font:14px system-ui;background:var(--bg);
-background-image:radial-gradient(at 20% 20%, rgba(108,99,255,.45) 0%, transparent 50%),
-radial-gradient(at 90% 80%, rgba(142,100,230,.35) 0%, transparent 50%),
-radial-gradient(at 50% 0%, rgba(108,99,255,.18) 0%, transparent 60%);min-height:100vh}
+:root{--purple:#6c63ff;--purple2:#8e64e6;--bg:#08060f;--card:#16121f;--line:rgba(108,99,255,.18);--text:#e9e7ff;--muted:#9a97b8}
+*{box-sizing:border-box}
+body{margin:0;color:var(--text);font:14px system-ui;background:var(--bg);
+background-image:radial-gradient(at 20% 20%, rgba(108,99,255,.45) 0%, transparent 50%),radial-gradient(at 90% 80%, rgba(142,100,230,.35) 0%, transparent 50%),radial-gradient(at 50% 0%, rgba(108,99,255,.18) 0%, transparent 60%);min-height:100vh}
 body::before{content:"";position:fixed;inset:0;background-image:linear-gradient(rgba(108,99,255,.04) 1px, transparent 1px), linear-gradient(90deg, rgba(108,99,255,.04) 1px, transparent 1px);background-size:36px 36px;pointer-events:none}
-.wrap{width:min(480px,100%);margin:auto;padding:22px 18px 0;position:relative;z-index:1}
-.top{display:flex;justify-content:space-between;align-items:center;padding:10px 4px}
-.brand{color:var(--purple);font-weight:900;letter-spacing:.14em;display:flex;gap:10px;align-items:center}
-.brand svg{width:24px;height:24px;filter:drop-shadow(0 0 10px var(--purple))}
-
-/* === FIXED NAV - NOW VISIBLE BUTTONS === */
-.nav{display:flex;gap:6px;background:rgba(108,99,255,.14);border:1px solid rgba(108,99,255,.30);border-radius:999px;padding:5px;backdrop-filter:blur(10px)}
-.nav a{color:#c4c1e6;text-decoration:none;font-size:11px;font-weight:800;letter-spacing:.08em;padding:9px 16px;border-radius:999px;transition:all.2s ease;border:1px solid transparent}
-.nav a:hover{color:white;background:rgba(108,99,255,.25)}
-.nav a.active{background:linear-gradient(90deg,var(--purple),var(--purple2));color:white;box-shadow:0 4px 18px rgba(108,99,255,.55);border-color:rgba(255,255,255,.15)}
-
-.tag{text-align:center;color:var(--purple);font-size:11px;letter-spacing:.25em;margin:14px 0 8px}
-h1{text-align:center;margin:0 0 10px;font:900 36px/1.05 system-ui;letter-spacing:-.03em}h1 span{color:var(--purple)}
-.intro{text-align:center;color:var(--muted);line-height:1.6;min-height:40px;max-width:340px;margin:0 auto 18px}
-.card{background:var(--card);backdrop-filter:blur(20px);border:1px solid var(--line);border-radius:28px;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.6), 0 0 0 1px rgba(108,99,255,.15) inset}
-
-/* === FIXED ICON - NOW WITH STRONG RING === */
-.card-icon{width:88px;height:88px;margin:6px auto 20px;background:linear-gradient(180deg,var(--purple),var(--purple2));border-radius:50%;display:grid;place-items:center;font-size:40px;position:relative;box-shadow:0 0 0 10px rgba(108,99,255,.18), 0 0 0 20px rgba(108,99,255,.08), 0 0 40px rgba(108,99,255,.7);animation:pulse 2.2s infinite}
-@keyframes pulse{0%{box-shadow:0 0 0 10px rgba(108,99,255,.18),0 0 0 20px rgba(108,99,255,.08),0 0 40px rgba(108,99,255,.7)}50%{box-shadow:0 0 0 14px rgba(108,99,255,.12),0 0 0 28px rgba(108,99,255,.04),0 0 55px rgba(108,99,255,.9)}100%{box-shadow:0 0 0 10px rgba(108,99,255,.18),0 0 0 20px rgba(108,99,255,.08),0 0 40px rgba(108,99,255,.7)}}
-
-.label{color:var(--purple);font-size:10px;letter-spacing:.18em;margin-bottom:10px;display:block}
-.input{display:flex;align-items:center;gap:8px;background:#0c0a14;border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.wrap{width:min(480px,100%);margin:auto;padding:16px 16px 0;position:relative;z-index:1}
+.top{display:flex;justify-content:space-between;align-items:center;padding:8px 2px;position:sticky;top:0;z-index:5;backdrop-filter:blur(12px)}
+.brand{color:var(--purple);font-weight:900;letter-spacing:.14em;display:flex;gap:8px;align-items:center}
+.brand span{background:rgba(108,99,255,.18);border:1px solid rgba(108,99,255,.3);padding:6px 12px;border-radius:999px;display:flex;align-items:center;gap:8px}
+.nav{display:flex;gap:6px;background:rgba(20,16,35,.8);border:1px solid var(--line);border-radius:999px;padding:5px}
+.nav a{color:#9e9bc0;text-decoration:none;font-size:11px;font-weight:800;letter-spacing:.08em;padding:8px 14px;border-radius:999px}
+.nav a.active{background:linear-gradient(90deg,var(--purple),var(--purple2));color:white;box-shadow:0 4px 18px rgba(108,99,255,.5)}
+.tag{text-align:center;color:var(--purple);font-size:10px;letter-spacing:.28em;margin:18px 0 10px}
+h1{text-align:center;margin:0 0 10px;font:900 32px/1.05 system-ui}h1 span{color:var(--purple)}
+.intro{text-align:center;color:var(--muted);line-height:1.6;min-height:40px;max-width:340px;margin:0 auto 18px;font-size:13px}
+.card{background:linear-gradient(180deg, #181426 0%, #141020 100%);border:1px solid rgba(108,99,255,.15);border-radius:28px;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.7)}
+.card-icon{width:84px;height:84px;margin:4px auto 18px;background:linear-gradient(180deg,var(--purple),var(--purple2));border-radius:50%;display:grid;place-items:center;font-size:36px;box-shadow:0 0 0 8px rgba(108,99,255,.12), 0 0 0 16px rgba(108,99,255,.06), 0 0 36px rgba(108,99,255,.6)}
+.label{color:#b9b6d6;font-size:10px;letter-spacing:.14em;margin:18px 0 8px;display:block;font-weight:700}
+.input{display:flex;align-items:center;gap:10px;background:#0e0b18;border:1px solid rgba(108,99,255,.18);border-radius:14px;padding:13px 14px}
 .input b{color:var(--purple)}input{flex:1;border:0;outline:0;background:transparent;color:var(--text);font:inherit}
-#generate{width:100%;margin-top:14px;border:0;border-radius:14px;padding:15px;background:linear-gradient(90deg,var(--purple),var(--purple2));color:white;font-weight:900;letter-spacing:.08em;cursor:pointer;box-shadow:0 8px 24px rgba(108,99,255,.4)}
-.result{margin-top:18px;padding:16px;border:1px dashed #ff7ac2;border-radius:16px;background:#1a1120}
-.token{display:block;margin-top:10px;color:#7cf7ff;font-size:22px;word-break:break-all}
-.copy{width:100%;margin-top:12px;border-radius:10px;border:1px solid #ff7ac2;background:transparent;color:#ff7ac2;padding:10px;cursor:pointer}
-.plans{margin-top:20px;padding-top:16px;border-top:1px solid var(--line)}
-.plans-head{display:flex;justify-content:space-between;font-size:9px;letter-spacing:.12em;color:var(--purple)}
+#generate{width:100%;margin-top:16px;border:0;border-radius:14px;padding:15px;background:linear-gradient(90deg,var(--purple),var(--purple2));color:white;font-weight:900;cursor:pointer;box-shadow:0 8px 24px rgba(108,99,255,.4)}
+.result{margin-top:16px;padding:14px;border:1px dashed #ff7ac2;border-radius:16px;background:#1a1120}
+.token{display:block;margin-top:8px;color:#7cf7ff;font-size:20px;word-break:break-all}
+.copy{width:100%;margin-top:10px;border-radius:10px;border:1px solid rgba(255,122,194,.6);background:transparent;color:#ff7ac2;padding:10px;cursor:pointer}
+.plans{margin-top:18px;padding-top:14px;border-top:1px solid var(--line)}
+.plans-head{display:flex;justify-content:space-between;font-size:9px;letter-spacing:.12em;color:var(--purple);font-weight:800}
 .plan-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
-.plan{background:#0c0a14;border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center}
+.plan{background:#0e0b18;border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center}
 .plan strong{color:white}.plan span{color:var(--muted);font-size:10px;display:block;margin-top:2px}.plan button{margin-top:8px;width:100%;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--muted);font-size:9px;padding:6px}
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:18px 0}
-.stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;text-align:center;backdrop-filter:blur(10px)}
-.stat b{display:block;color:var(--purple);font-size:10px;letter-spacing:.1em}.stat strong{display:block;font-size:18px;margin-top:6px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;text-align:center}
+.stat b{display:block;color:var(--purple);font-size:9px}.stat strong{display:block;font-size:17px;margin-top:6px}
 .how{margin:20px 0}.how h3{margin:0 0 4px}.how p{color:var(--muted);margin:0 0 12px;font-size:12px}
 .step{display:flex;gap:12px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:10px}
-.step i{width:34px;height:34px;border-radius:50%;background:linear-gradient(180deg,var(--purple),var(--purple2));display:grid;place-items:center;font-style:normal;font-weight:900;flex:0 0 34px}
-.step strong{display:block;font-size:14px}.step span{color:var(--muted);font-size:11px}
-.footer{margin:26px 0 30px;padding:18px;border-top:1px solid var(--line);display:flex;gap:12px;align-items:center;background:var(--card);border-radius:14px}
-.footer svg{width:36px;height:36px}.footer a{color:#25D366;text-decoration:none;font-weight:700}
-.copyright{text-align:center;color:var(--muted);font-size:10px;padding-bottom:20px}
-.toast{position:fixed;right:14px;bottom:14px;background:#241329;border:1px solid #ff7ac2;color:white;padding:12px 14px;border-radius:10px;display:none;z-index:9}.toast.show{display:block}
-.progress{display:none;margin-top:14px;padding:12px;border:1px solid var(--line);border-radius:12px;background:#0c0a14;font-size:11px;color:var(--purple)}.progress.show{display:block}
+.step i{width:32px;height:32px;border-radius:50%;background:linear-gradient(180deg,var(--purple),var(--purple2));display:grid;place-items:center;font-style:normal;font-weight:900;flex:0 0 32px}
+.footer{margin:22px 0 26px;padding:16px;border:1px solid var(--line);display:flex;gap:12px;align-items:center;background:var(--card);border-radius:16px}
+.footer a{color:#25D366;text-decoration:none;font-weight:700}
+.copyright{text-align:center;color:var(--muted);font-size:10px;padding-bottom:22px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;background:#241329;border:1px solid #ff7ac2;color:white;padding:12px 18px;border-radius:999px;display:none;z-index:99}.toast.show{display:block}
+.progress{display:none;margin-top:14px;padding:10px;border-radius:10px;background:#0e0b18;border:1px solid var(--line);font-size:11px;color:var(--purple)}.progress.show{display:block}
 </style>
 </head>
 <body>
 <div class="wrap">
-<header class="top"><div class="brand"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>// REDTECH</div><nav class="nav"><a href="/token" class="active">TOKEN</a><a href="/code">PAIR CODE</a></nav></header>
+<header class="top"><div class="brand"><span>⚡ REDTECH-AI</span></div><nav class="nav"><a href="/token" class="active">TOKEN</a><a href="/code">PAIR</a></nav></header>
 <div class="tag">[ NODE 01 / IDENTITY ]</div>
 <h1>Claim your <span>Redtech token.</span></h1>
 <p class="intro" id="rotating-copy"></p>
@@ -71,7 +61,7 @@ h1{text-align:center;margin:0 0 10px;font:900 36px/1.05 system-ui;letter-spacing
 <div id="progress" class="progress"><span id="progress-text">VALIDATING...</span></div>
 <div id="result" class="result" hidden><small>YOUR REUSABLE REDTECH TOKEN</small><strong id="token" class="token"></strong><button id="copy" class="copy">COPY TOKEN</button></div>
 <div class="plans"><div class="plans-head"><span>TOKEN ACCESS PLANS</span><span id="payment-state">CHECKING...</span></div>
-<div class="plan-grid"><div class="plan"><strong>KSh 29</strong><span>7 DAYS</span><button disabled>STK PUSH OFFLINE</button></div><div class="plan"><strong>KSh 49</strong><span>14 DAYS</span><button disabled>STK PUSH OFFLINE</button></div><div class="plan"><strong>KSh 99</strong><span>30 DAYS</span><button disabled>STK PUSH OFFLINE</button></div></div></div>
+<div class="plan-grid"><div class="plan"><strong>KSh 29</strong><span>7 DAYS</span><button disabled>STK OFFLINE</button></div><div class="plan"><strong>KSh 49</strong><span>14 DAYS</span><button disabled>STK OFFLINE</button></div><div class="plan"><strong>KSh 99</strong><span>30 DAYS</span><button disabled>STK OFFLINE</button></div></div></div>
 </section>
 <div class="stats"><div class="stat"><b>ACTIVE NODES</b><strong>12.4K</strong></div><div class="stat"><b>UPTIME</b><strong>99.9%</strong></div><div class="stat"><b>PING</b><strong>14ms</strong></div></div>
 <div class="how"><h3>How it works</h3><p>Get started in 3 simple steps</p>
@@ -79,10 +69,7 @@ h1{text-align:center;margin:0 0 10px;font:900 36px/1.05 system-ui;letter-spacing
 <div class="step"><i>2</i><div><strong>Generate Token</strong><span>One token, reusable</span></div></div>
 <div class="step"><i>3</i><div><strong>Claim & Pair</strong><span>Use token on Pair Code page</span></div></div>
 </div>
-<div class="footer">
-<svg viewBox="0 0 24 24" fill="#25D366"><path d="M12 0C5.37 0 0 5.37 0 12c0 2.11.55 4.11 1.6 5.85L0 24l6.3-1.65A11.9 11.9 0 0012 24c6.63 0 12-5.37 12-12S18.63 0 12 0z"/></svg>
-<div><div>Join our Community</div><a href="https://whatsapp.com/channel/0029Vb9AwScF6sn47ClubG1Z" target="_blank">WhatsApp Channel →</a></div>
-</div>
+<div class="footer"><div><div>Join our Community</div><a href="https://whatsapp.com/channel/0029Vb9AwScF6sn47ClubG1Z" target="_blank">WhatsApp Channel →</a></div></div>
 <div class="copyright">© 2026 Redtech AI. All rights reserved.</div>
 </div>
 <div id="toast" class="toast"></div>
@@ -96,4 +83,5 @@ $("#generate").onclick=async()=>{const phone=$("#phone").value.trim();if(!phone)
 $("#copy").onclick=async()=>{await navigator.clipboard.writeText($("#token").textContent);toast("Copied!")};
 fetch("/api/bot/payment-config").then(r=>r.json()).then(c=>{$("#payment-state").textContent=c.enabled?"MPESA READY":"COMING SOON"}).catch(()=>$("#payment-state").textContent="OFFLINE");
 </script>
-</body></html>
+</body>
+  </html>
