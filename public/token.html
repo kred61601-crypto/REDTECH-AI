@@ -3,85 +3,133 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>𝐑𝐄𝐃𝐓𝐄𝐂𝐇-𝐀𝐈 // Token</title>
+<title>REDTECH-AI // Token</title>
 <style>
-:root{--purple:#6c63ff;--purple2:#8e64e6;--bg:#08060f;--card:#16121f;--line:rgba(108,99,255,.18);--text:#e9e7ff;--muted:#9a97b8}
+:root{
+  --purple:#6c63ff; --purple2:#8e64e6;
+  --bg:#08060f; --card:#15121f; --card2:#1d182c;
+  --line:rgba(108,99,255,.18); --text:#e9e7ff; --muted:#9a97b8;
+}
 *{box-sizing:border-box}
-body{margin:0;color:var(--text);font:14px system-ui;background:var(--bg);
-background-image:radial-gradient(at 20% 20%, rgba(108,99,255,.45) 0%, transparent 50%),radial-gradient(at 90% 80%, rgba(142,100,230,.35) 0%, transparent 50%),radial-gradient(at 50% 0%, rgba(108,99,255,.18) 0%, transparent 60%);min-height:100vh}
-body::before{content:"";position:fixed;inset:0;background-image:linear-gradient(rgba(108,99,255,.04) 1px, transparent 1px), linear-gradient(90deg, rgba(108,99,255,.04) 1px, transparent 1px);background-size:36px 36px;pointer-events:none}
-.wrap{width:min(480px,100%);margin:auto;padding:16px 16px 0;position:relative;z-index:1}
-.top{display:flex;justify-content:space-between;align-items:center;padding:8px 2px;position:sticky;top:0;z-index:5;backdrop-filter:blur(12px)}
-.brand{color:var(--purple);font-weight:900;letter-spacing:.14em;display:flex;gap:8px;align-items:center}
-.brand span{background:rgba(108,99,255,.18);border:1px solid rgba(108,99,255,.3);padding:6px 12px;border-radius:999px;display:flex;align-items:center;gap:8px}
-.nav{display:flex;gap:6px;background:rgba(20,16,35,.8);border:1px solid var(--line);border-radius:999px;padding:5px}
-.nav a{color:#9e9bc0;text-decoration:none;font-size:11px;font-weight:800;letter-spacing:.08em;padding:8px 14px;border-radius:999px}
-.nav a.active{background:linear-gradient(90deg,var(--purple),var(--purple2));color:white;box-shadow:0 4px 18px rgba(108,99,255,.5)}
-.tag{text-align:center;color:var(--purple);font-size:10px;letter-spacing:.28em;margin:18px 0 10px}
-h1{text-align:center;margin:0 0 10px;font:900 32px/1.05 system-ui}h1 span{color:var(--purple)}
-.intro{text-align:center;color:var(--muted);line-height:1.6;min-height:40px;max-width:340px;margin:0 auto 18px;font-size:13px}
-.card{background:linear-gradient(180deg, #181426 0%, #141020 100%);border:1px solid rgba(108,99,255,.15);border-radius:28px;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.7)}
-.card-icon{width:84px;height:84px;margin:4px auto 18px;background:linear-gradient(180deg,var(--purple),var(--purple2));border-radius:50%;display:grid;place-items:center;font-size:36px;box-shadow:0 0 0 8px rgba(108,99,255,.12), 0 0 0 16px rgba(108,99,255,.06), 0 0 36px rgba(108,99,255,.6)}
-.label{color:#b9b6d6;font-size:10px;letter-spacing:.14em;margin:18px 0 8px;display:block;font-weight:700}
-.input{display:flex;align-items:center;gap:10px;background:#0e0b18;border:1px solid rgba(108,99,255,.18);border-radius:14px;padding:13px 14px}
-.input b{color:var(--purple)}input{flex:1;border:0;outline:0;background:transparent;color:var(--text);font:inherit}
-#generate{width:100%;margin-top:16px;border:0;border-radius:14px;padding:15px;background:linear-gradient(90deg,var(--purple),var(--purple2));color:white;font-weight:900;cursor:pointer;box-shadow:0 8px 24px rgba(108,99,255,.4)}
-.result{margin-top:16px;padding:14px;border:1px dashed #ff7ac2;border-radius:16px;background:#1a1120}
-.token{display:block;margin-top:8px;color:#7cf7ff;font-size:20px;word-break:break-all}
-.copy{width:100%;margin-top:10px;border-radius:10px;border:1px solid rgba(255,122,194,.6);background:transparent;color:#ff7ac2;padding:10px;cursor:pointer}
-.plans{margin-top:18px;padding-top:14px;border-top:1px solid var(--line)}
-.plans-head{display:flex;justify-content:space-between;font-size:9px;letter-spacing:.12em;color:var(--purple);font-weight:800}
-.plan-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
-.plan{background:#0e0b18;border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center}
-.plan strong{color:white}.plan span{color:var(--muted);font-size:10px;display:block;margin-top:2px}.plan button{margin-top:8px;width:100%;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--muted);font-size:9px;padding:6px}
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:18px 0}
-.stat{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;text-align:center}
-.stat b{display:block;color:var(--purple);font-size:9px}.stat strong{display:block;font-size:17px;margin-top:6px}
-.how{margin:20px 0}.how h3{margin:0 0 4px}.how p{color:var(--muted);margin:0 0 12px;font-size:12px}
-.step{display:flex;gap:12px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:10px}
-.step i{width:32px;height:32px;border-radius:50%;background:linear-gradient(180deg,var(--purple),var(--purple2));display:grid;place-items:center;font-style:normal;font-weight:900;flex:0 0 32px}
-.footer{margin:22px 0 26px;padding:16px;border:1px solid var(--line);display:flex;gap:12px;align-items:center;background:var(--card);border-radius:16px}
-.footer a{color:#25D366;text-decoration:none;font-weight:700}
-.copyright{text-align:center;color:var(--muted);font-size:10px;padding-bottom:22px}
-.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;background:#241329;border:1px solid #ff7ac2;color:white;padding:12px 18px;border-radius:999px;display:none;z-index:99}.toast.show{display:block}
-.progress{display:none;margin-top:14px;padding:10px;border-radius:10px;background:#0e0b18;border:1px solid var(--line);font-size:11px;color:var(--purple)}.progress.show{display:block}
+body{
+  margin:0; color:var(--text); font:14px system-ui; background:var(--bg);
+  background-image:
+    radial-gradient(at 20% 20%, rgba(108,99,255,.45) 0%, transparent 50%),
+    radial-gradient(at 90% 80%, rgba(142,100,230,.35) 0%, transparent 50%),
+    radial-gradient(at 50% 0%, rgba(108,99,255,.18) 0%, transparent 60%);
+  min-height:100vh; transition: all .3s ease;
+}
+body::before{
+  content:""; position:fixed; inset:0;
+  background-image:linear-gradient(rgba(108,99,255,.04) 1px, transparent 1px), linear-gradient(90deg, rgba(108,99,255,.04) 1px, transparent 1px);
+  background-size:36px 36px; pointer-events:none; z-index:0;
+}
+/* LIGHT MODE - like in your video at 00:07 */
+body.light{
+  --bg:#f5f3ff; --card:#ffffff; --card2:#f0edff;
+  --line:rgba(108,99,255,.15); --text:#1a1628; --muted:#7a7894;
+  background-image:
+    radial-gradient(at 20% 20%, rgba(108,99,255,.18) 0%, transparent 50%),
+    radial-gradient(at 90% 80%, rgba(142,100,230,.15) 0%, transparent 50%);
+}
+body.light::before{
+  background-image:linear-gradient(rgba(108,99,255,.06) 1px, transparent 1px), linear-gradient(90deg, rgba(108,99,255,.06) 1px, transparent 1px);
+}
+
+.wrap{width:min(460px,100%); margin:auto; padding:14px 16px 0; position:relative; z-index:1}
+.top{display:flex; justify-content:space-between; align-items:center; padding:10px 4px; background:rgba(15,12,24,.8); border:1px solid var(--line); border-radius:16px; backdrop-filter:blur(20px); margin-bottom:16px}
+.brand{font-weight:900; letter-spacing:.12em; color:var(--text); display:flex; align-items:center; gap:8px}
+.brand i{width:28px; height:28px; background:linear-gradient(180deg,var(--purple),var(--purple2)); display:grid; place-items:center; border-radius:8px; font-style:normal}
+.actions{display:flex; gap:8px; align-items:center}
+.icon-btn{width:36px; height:36px; border-radius:50%; border:1px solid var(--line); background:var(--card); display:grid; place-items:center; cursor:pointer; color:var(--text)}
+
+.hero{text-align:center; padding:18px 0 10px}
+.hero-icon{width:92px; height:92px; margin:0 auto 14px; background:linear-gradient(180deg,#7c74ff,#6c63ff); border-radius:50%; display:grid; place-items:center; font-size:42px; box-shadow:0 0 0 10px rgba(108,99,255,.14), 0 0 0 22px rgba(108,99,255,.06), 0 0 40px rgba(108,99,255,.6); animation: pulse 2.5s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 10px rgba(108,99,255,.14),0 0 0 22px rgba(108,99,255,.06),0 0 40px rgba(108,99,255,.6)}50%{box-shadow:0 0 0 14px rgba(108,99,255,.18),0 0 0 30px rgba(108,99,255,.08),0 0 60px rgba(108,99,255,.8)}}
+.hero h1{margin:0; font-size:26px; font-weight:900; letter-spacing:-.02em}
+.hero p{margin:6px 0 0; color:var(--muted); font-size:13px}
+
+.card{background:linear-gradient(180deg, var(--card) 0%, var(--card2) 100%); border:1px solid var(--line); border-radius:20px; padding:14px; margin-top:18px; backdrop-filter:blur(20px)}
+.card-row{display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,.2); border:1px solid var(--line); border-radius:14px; padding:12px 14px; margin-bottom:12px}
+.dot{width:8px; height:8px; background:#00e676; border-radius:50%; box-shadow:0 0 8px #00e676; display:inline-block; margin-right:6px}
+.select{border:0; background:var(--card2); color:var(--text); padding:6px 10px; border-radius:8px; font-weight:700}
+
+.info{background:rgba(108,99,255,.08); border:1px solid rgba(108,99,255,.15); border-radius:14px; padding:12px 14px; display:flex; gap:10px; font-size:12px; line-height:1.5; color:var(--muted)}
+.info b{color:var(--text)}
+
+.label{font-size:11px; font-weight:800; letter-spacing:.12em; color:var(--muted); margin:18px 0 8px; display:block}
+.input{width:100%; background:#0c0a14; border:1px solid var(--line); border-radius:14px; padding:14px 16px; display:flex; gap:10px; align-items:center}
+body.light .input{background:#ffffff}
+.input input{flex:1; border:0; outline:0; background:transparent; color:var(--text); font-size:14px}
+.btn{width:100%; margin-top:14px; border:0; border-radius:14px; padding:15px; background:linear-gradient(90deg,var(--purple),var(--purple2)); color:white; font-weight:900; letter-spacing:.05em; cursor:pointer; box-shadow:0 10px 24px rgba(108,99,255,.35)}
+.hint{margin-top:14px; background:rgba(0,0,0,.25); border:1px dashed rgba(108,99,255,.2); border-radius:14px; padding:12px; text-align:center; color:var(--muted); font-size:12px}
+
+/* MENU DRAWER - like in video */
+.menu{position:fixed; inset:0; z-index:100; display:none}
+.menu.show{display:block}
+.menu-bg{position:absolute; inset:0; background:rgba(0,0,0,.6); backdrop-filter:blur(6px)}
+.menu-panel{position:absolute; right:0; top:0; bottom:0; width:78%; max-width:320px; background:#0d0a18; border-left:1px solid var(--line); padding:18px; overflow:auto}
+body.light .menu-panel{background:#ffffff}
+.menu-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:20px}
+.menu-sec{font-size:10px; letter-spacing:.2em; color:var(--purple); font-weight:800; margin:18px 0 10px}
+.menu a{display:flex; gap:10px; padding:10px 0; color:var(--text); text-decoration:none; font-size:14px; border-bottom:1px solid rgba(108,99,255,.08)}
 </style>
 </head>
 <body>
 <div class="wrap">
-<header class="top"><div class="brand"><span>⚡ REDTECH-AI</span></div><nav class="nav"><a href="/token" class="active">TOKEN</a><a href="/code">PAIR</a></nav></header>
-<div class="tag">[ NODE 01 / IDENTITY ]</div>
-<h1>Claim your <span>Redtech token.</span></h1>
-<p class="intro" id="rotating-copy"></p>
-<section class="card">
-<div class="card-icon">⚡</div>
-<label class="label">PHONE // INTERNATIONAL FORMAT</label>
-<div class="input"><b>+</b><input id="phone" placeholder="254 7XX XXX XXX"></div>
-<button id="generate">GENERATE TOKEN //→</button>
-<div id="progress" class="progress"><span id="progress-text">VALIDATING...</span></div>
-<div id="result" class="result" hidden><small>YOUR REUSABLE REDTECH TOKEN</small><strong id="token" class="token"></strong><button id="copy" class="copy">COPY TOKEN</button></div>
-<div class="plans"><div class="plans-head"><span>TOKEN ACCESS PLANS</span><span id="payment-state">CHECKING...</span></div>
-<div class="plan-grid"><div class="plan"><strong>KSh 29</strong><span>7 DAYS</span><button disabled>STK OFFLINE</button></div><div class="plan"><strong>KSh 49</strong><span>14 DAYS</span><button disabled>STK OFFLINE</button></div><div class="plan"><strong>KSh 99</strong><span>30 DAYS</span><button disabled>STK OFFLINE</button></div></div></div>
-</section>
-<div class="stats"><div class="stat"><b>ACTIVE NODES</b><strong>12.4K</strong></div><div class="stat"><b>UPTIME</b><strong>99.9%</strong></div><div class="stat"><b>PING</b><strong>14ms</strong></div></div>
-<div class="how"><h3>How it works</h3><p>Get started in 3 simple steps</p>
-<div class="step"><i>1</i><div><strong>Enter Phone</strong><span>Your WhatsApp number</span></div></div>
-<div class="step"><i>2</i><div><strong>Generate Token</strong><span>One token, reusable</span></div></div>
-<div class="step"><i>3</i><div><strong>Claim & Pair</strong><span>Use token on Pair Code page</span></div></div>
+  <div class="top">
+    <div class="brand"><i>⚡</i> REDTECH-AI</div>
+    <div class="actions">
+      <button class="icon-btn" id="themeBtn" title="Dark/Light">🌙</button>
+      <button class="icon-btn" id="menuBtn">☰</button>
+    </div>
+  </div>
+
+  <div class="hero">
+    <div class="hero-icon">⚡</div>
+    <h1>REDTECH-AI</h1>
+    <p>Generate Your Pairing Code</p>
+  </div>
+
+  <div class="card">
+    <div class="card-row">
+      <div><span class="dot"></span><b style="font-size:12px">Select Server</b><br><small style="color:var(--muted)">ACTIVE</small></div>
+      <div style="display:flex; gap:8px; align-items:center"><small>LIMIT 50</small><select class="select"><option>Select</option></select></div>
+    </div>
+    <div class="info"><span>ℹ️</span><div>Select a server, enter your WhatsApp number, and click <b>Generate Pair Code</b> to get your 8-digit pairing code.</div></div>
+    
+    <label class="label">WhatsApp Number</label>
+    <div class="input">📞 <input id="phone" placeholder="92342758xxxx"></div>
+    <small style="color:var(--muted); margin-top:6px; display:block">Include country code (e.g. 92 for Pakistan)</small>
+    <button class="btn">🔑 Generate Pair Code</button>
+    <div class="hint">Your pairing code will appear here</div>
+  </div>
 </div>
-<div class="footer"><div><div>Join our Community</div><a href="https://whatsapp.com/channel/0029Vb9AwScF6sn47ClubG1Z" target="_blank">WhatsApp Channel →</a></div></div>
-<div class="copyright">© 2026 Redtech AI. All rights reserved.</div>
+
+<!-- MENU LIKE VIDEO -->
+<div class="menu" id="menu">
+  <div class="menu-bg" onclick="closeMenu()"></div>
+  <div class="menu-panel">
+    <div class="menu-head"><b>MENU</b><button class="icon-btn" onclick="closeMenu()">✕</button></div>
+    <div class="menu-sec">SERVICES</div>
+    <a>⚡ Instant Support</a><a>👥 Lead Capture</a><a>🛒 Order Automation</a>
+    <div class="menu-sec">RESOURCES</div>
+    <a>ℹ️ About Us</a><a>📝 Blogs</a><a>🛍️ Store</a><a>🎥 Video Tutorials</a>
+    <div class="menu-sec">SUPPORT</div>
+    <a>✉️ Contact</a><a>🔒 Privacy Policy</a><a>📄 Terms of Use</a>
+  </div>
 </div>
-<div id="toast" class="toast"></div>
+
 <script>
-const $=s=>document.querySelector(s);
-const copyLines=["Generate once. Store it safely. Use the same token whenever you need a new WhatsApp pairing code.","Your Redtech token stays yours."];
-(async()=>{const t=$("#rotating-copy");for(let i=0;;i=(i+1)%copyLines.length){const l=copyLines[i];for(let j=0;j<=l.length;j++){t.textContent=l.slice(0,j);await new Promise(r=>setTimeout(r,35))}await new Promise(r=>setTimeout(r,2500));for(let j=l.length;j>=0;j--){t.textContent=l.slice(0,j);await new Promise(r=>setTimeout(r,18))}}})();
-function toast(m){$("#toast").textContent=m;$("#toast").classList.add("show");setTimeout(()=>$("#toast").classList.remove("show"),3000)}
-async function api(u,o){const r=await fetch(u,{headers:{"Content-Type":"application/json"},...o});const d=await r.json().catch(()=>({}));if(!r.ok)throw Error(d.error||"Request failed");return d}
-$("#generate").onclick=async()=>{const phone=$("#phone").value.trim();if(!phone)return toast("Enter phone");const b=$("#generate");b.disabled=true;$("#progress").classList.add("show");try{const d=await api("/api/bot/token",{method:"POST",body:JSON.stringify({phone})});$("#result").hidden=false;$("#token").textContent=d.token||"";toast("Token created")}catch(e){toast(e.message)}finally{b.disabled=false;$("#progress").classList.remove("show")}};
-$("#copy").onclick=async()=>{await navigator.clipboard.writeText($("#token").textContent);toast("Copied!")};
-fetch("/api/bot/payment-config").then(r=>r.json()).then(c=>{$("#payment-state").textContent=c.enabled?"MPESA READY":"COMING SOON"}).catch(()=>$("#payment-state").textContent="OFFLINE");
+const body=document.body;
+const themeBtn=document.getElementById('themeBtn');
+themeBtn.onclick=()=>{
+  body.classList.toggle('light');
+  themeBtn.textContent = body.classList.contains('light') ? '☀️' : '🌙';
+}
+const menu=document.getElementById('menu');
+document.getElementById('menuBtn').onclick=()=>menu.classList.add('show');
+function closeMenu(){menu.classList.remove('show')}
 </script>
 </body>
-  </html>
+</html>
